@@ -1,0 +1,28 @@
+import os
+import sys
+from setuptools import setup, find_packages
+
+def read(*rnames):
+    return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
+
+setup(
+    name='sterch.scrapingtools',
+    version='0.1.0',
+    url='http://pypi.sterch.net',
+    license='ZPL',
+    description='Library to build scrapers',
+    author='Polsha Maxim',
+    author_email='maxp@sterch.net',
+    long_description='\n\n'.join([
+        open('README.txt').read()
+        ]),
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
+    package_data={'': ['*.*']},
+    namespace_packages=['sterch'],
+    install_requires=[
+      'setuptools',
+     ],
+    zip_safe=False,
+    include_package_data=True
+)

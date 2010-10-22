@@ -1,0 +1,4 @@
+1. Move list of ips and list of proxies to Client constructor instead of ips.txt and proxies.txt 
+2. Add comments to handlers.py
+3. Add gzipped/deflated content support
+4. Add documentation and tests

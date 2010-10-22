@@ -1,0 +1,4 @@
+#200.97.9.77:3128
+#http://10.0.0.10:3128/
+#http://mobile.sterch.net:3128/
+#http://mediamenu.sterch.net:3128/

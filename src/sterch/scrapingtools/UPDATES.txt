@@ -1,0 +1,16 @@
+22 Oct 2010
+	Egg sterch.scrapingtools created
+	
+26 May 2010	
+	1. module for useful decorators added.
+	2. @syncronized decorator  added
+
+17 May 2010
+	1. append_unique method added to Sync list
+	2. DuplicateValueError exception added
+	
+19 Apr 2010
+	replace_html_entities modified according to HTML 4 specification.
+
+17 Apr 2010
+    Moved to separate product.
