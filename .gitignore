@@ -8,3 +8,4 @@ parts
 products
 develop-eggs
 var
+dist
