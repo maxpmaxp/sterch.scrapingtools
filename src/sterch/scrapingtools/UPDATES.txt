@@ -1,3 +1,6 @@
+04 Jan 2012
+	headers, proxies and bound ips are being looked for as IHTTPHeadersFactory, IProxyFactory, IIPFactory utilities
+	
 22 Oct 2010
 	Egg sterch.scrapingtools created
 	

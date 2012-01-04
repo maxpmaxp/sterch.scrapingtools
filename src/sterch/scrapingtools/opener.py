@@ -7,20 +7,18 @@
 #######################################################################
 
 """ Page downloading tools
-
-$Id: opener.py 14239 2010-04-20 10:05:00Z maxp $
 """
 __author__  = "Polscha Maxim (maxp@sterch.net)"
-__license__ = "<undefined>" # необходимо согласование
-__version__ = "$Revision: 14239 $"
-__date__ = "$Date: 2010-04-20 13:05:00 +0300 (Вт, 20 апр 2010) $"
+__license__ = "ZPL"
 
 from config import MAXREADTRIES, DELAY
 from cookielib import CookieJar
 from handlers import BindableHTTPHandlerFactory
-from headers import getheaders
+from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory
 from random import choice
 from time import sleep
+from zope.component import getUtility
+from zope.interface import directlyProvides
 
 import mimetypes
 import os.path
@@ -41,6 +39,13 @@ except Exception, ex:
     print ex
     proxies = []
 
+def getproxy():
+    """ Simple proxy factory """
+    global proxies
+    return choice(proxies) if proxies else None
+
+directlyProvides(getproxy, IProxyFactory)
+
 # Load available IPS
 try:
     f = open(os.path.join(__MY__PATH__, "ips.txt"),"rt")
@@ -51,16 +56,21 @@ except Exception, ex:
     print ex
     ips = []
 
+def getip():
+    """ Simple ip factory """
+    global ips
+    return choice(ips) if ips else None
+
+directlyProvides(getip, IIPFactory)
     
 def createOpener(cookies=None, headers=None, _proxies=None):
-    global ips
     handlers = []
     if _proxies:
         proxy_support = urllib2.ProxyHandler(_proxies)
         handlers.append(proxy_support)
     
-    if ips:
-        handlers.append(BindableHTTPHandlerFactory(choice(ips)))
+    bindip = getUtility(IIPFactory)()
+    if bindip: handlers.append(BindableHTTPHandlerFactory(bindip))
         
     if cookies is not None :
         c = urllib2.HTTPCookieProcessor()
@@ -73,7 +83,7 @@ def createOpener(cookies=None, headers=None, _proxies=None):
     if headers:
         opener.addheaders = headers
     else:
-        opener.addheaders = getheaders()
+        opener.addheaders = getUtility(IHTTPHeadersFactory)()
     return opener
 
 def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False):
@@ -163,7 +173,6 @@ class Client(object):
         every read uses same cookiejar, same proxy and same browser headers.
     """
     def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False):
-        global proxies
          
         if cookies is not None:
             self.cookies = cookies
@@ -172,14 +181,13 @@ class Client(object):
         if headers:
             self.headers = headers 
         else:
-            self.headers = getheaders()
+            self.headers = getUtility(IHTTPHeadersFactory)()
         if not noproxy: 
             if _proxies:
                 self.proxies = _proxies
-            elif proxies:
-                self.proxies = {'http' : choice(proxies), 'https' : choice(proxies) }
-            else:
-                self.proxies = None
+            else: 
+                p = getUtility(IProxyFactory)()
+                self.proxies = {'http' : p, 'https' : p } if p else None
         else:
             self.proxies = None
         self.lastURL = None

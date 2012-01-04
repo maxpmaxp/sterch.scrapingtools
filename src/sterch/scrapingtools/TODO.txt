@@ -1,3 +1,4 @@
+0. Remove ips.txt and proxies.txt --- these are obsoleted ones but code depends on them still.
 1. Move list of ips and list of proxies to Client constructor instead of ips.txt and proxies.txt 
 2. Add comments to handlers.py
 3. Add gzipped/deflated content support

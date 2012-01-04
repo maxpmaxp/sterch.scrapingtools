@@ -7,13 +7,9 @@
 #######################################################################
 
 """Client classes for the Zope 3 based components.clients package
-
-$Id: handlers.py 14403 2010-04-29 14:34:40Z maxp $
 """
 __author__  = "Polscha Maxim (maxp@sterch.net) Copy-pasted from http://code.activestate.com/recipes/456195/"
-__license__ = "<undefined>" # необходимо согласование
-__version__ = "$Revision: 14403 $"
-__date__ = "$Date: 2010-04-29 17:34:40 +0300 (Чт, 29 апр 2010) $"
+__license__ = "ZPL" 
 
 import httplib
 import socket
