@@ -1,7 +1,7 @@
 Changelog
 *********
 
-0.2
+0.2 (2012-07-25)
 =======================
  * corrected client behaviour when no proxies/ips factories are defined
  * deflate/gzip encoding support added
@@ -11,4 +11,4 @@ Changelog
  * copyright headers were changed
  * new browser headers were added
  * parse_fulladdress, parse_fullname functions were added
- 
+ * optional X-Proxy-Session header added to Client to serve sticky proxy sessions

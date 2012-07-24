@@ -14,7 +14,7 @@ from cStringIO import StringIO
 from gzip import GzipFile
 from handlers import BindableHTTPHandlerFactory
 from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory
-from random import choice
+from random import choice, randint
 from time import sleep
 from zope.component import getUtility, ComponentLookupError
 from zope.interface import directlyProvides
@@ -152,7 +152,7 @@ class Client(object):
     """ Simple browser emulator implements following policy:
         every read uses same cookiejar, same proxy and same browser headers.
     """
-    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False):
+    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False,x_proxy_session=True):
          
         if cookies is not None:
             self.cookies = cookies
@@ -165,6 +165,8 @@ class Client(object):
                 self.headers = getUtility(IHTTPHeadersFactory)()
             except ComponentLookupError:
                 self.headers = []
+        if x_proxy_session:
+            self.headers.append(('X-Proxy-Session', str(randint(0,10**10))))
         if not noproxy: 
             if _proxies:
                 self.proxies = _proxies
