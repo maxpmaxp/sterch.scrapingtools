@@ -10,6 +10,7 @@ __license__ = "ZPL"
 
 from config import MAXREADTRIES, DELAY
 from cookielib import CookieJar
+from cStringIO import StringIO
 from gzip import GzipFile
 from handlers import BindableHTTPHandlerFactory
 from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory
