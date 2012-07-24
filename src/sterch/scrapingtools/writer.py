@@ -1,19 +1,12 @@
 ### -*- coding: utf-8 -*- #############################################
-# Разработано компанией Стерх (http://sterch.net/)
-# Все права защищены, 2008
-#
-# Developed by Sterch (http://sterch.net/)
-# All right reserved, 2008
+# Developed by Maksym Polshcha (maxp@sterch.net)
+# All right reserved, 2012
 #######################################################################
 
-""" Scrapper for http://www.goldbergcoins.com/pastauction/index.shtml
-    
-$Id: writer.py 14192 2010-04-17 08:44:49Z maxp $
+""" CSV writers
 """
 __author__  = "Maxim Polscha (maxp@sterch.net)"
-__license__ = "<undefined>" # необходимо согласование
-__version__ = "$Revision: 14192 $"
-__date__ = "$Date: 2010-04-17 11:44:49 +0300 (Сб, 17 апр 2010) $"
+__license__ = "ZPL"
 
 import csv
 from string import strip

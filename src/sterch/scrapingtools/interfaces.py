@@ -1,9 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
-# Разработано компанией Стерх (http://sterch.net/)
-# Все права защищены, 2011
-#
-# Developed by Sterch (http://sterch.net/)
-# All right reserved, 2011
+# Developed by Maksym Polshcha (maxp@sterch.net)
+# All right reserved, 2012
 #######################################################################
 
 """Interfaces for the ZCA based sterch.scrapingtools package

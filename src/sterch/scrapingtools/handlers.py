@@ -1,12 +1,9 @@
 ### -*- coding: utf-8 -*- #############################################
-# Разработано компанией Стерх (http://sterch.net/)
-# Все права защищены, 2008
-#
-# Developed by Sterch (http://sterch.net/)
-# All right reserved, 2008
+# Developed by Maksym Polshcha (maxp@sterch.net)
+# All right reserved, 2012
 #######################################################################
 
-"""Client classes for the Zope 3 based components.clients package
+"""Client classes for the Zope 3 based
 """
 __author__  = "Polscha Maxim (maxp@sterch.net) Copy-pasted from http://code.activestate.com/recipes/456195/"
 __license__ = "ZPL" 

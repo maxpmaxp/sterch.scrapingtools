@@ -1,19 +1,12 @@
 ### -*- coding: utf-8 -*- #############################################
-# Разработано компанией Стерх (http://sterch.net/)
-# Все права защищены, 2008
-#
-# Developed by Sterch (http://sterch.net/)
-# All right reserved, 2008
+# Developed by Maksym Polshcha (maxp@sterch.net)
+# All right reserved, 2012
 #######################################################################
 
 """Text processing functions
-
-$Id: text.py 14403 2010-04-29 14:34:40Z maxp $
 """
 __author__  = "Polshcha Maxim (maxp@sterch.net)"
-__license__ = "<undefined>" # необходимо согласование
-__version__ = "$Revision: 14403 $"
-__date__ = "$Date: 2010-04-29 17:34:40 +0300 (Чт, 29 апр 2010) $"
+__license__ = "ZPL"
 
 import csv
 import os.path
@@ -66,3 +59,71 @@ def tofilename(name):
     illegal=":,|<>\\/\"'~`!@#$%^&*()\n\r\t?;"
     for s in illegal : n = n.replace(s,'')
     return n
+
+def parse_fullname(fullname):
+    """ Parses a fullname into pieces: firstname, lastname, middlename, suffix.
+        Returns dict """
+    job = dict()
+    job['firstname'] = job['lastname'] = job['middlename'] = job['suffix'] = ''
+    if ", " in fullname:
+        _allnames = fullname.split(", ",1)
+        allnames = [_allnames[0],] + _allnames[1].split()
+    else:
+        allnames = filter(None, fullname.split())
+    job["suffix"] = ''
+    if allnames:
+        if allnames[0].upper() in ('STATE', 'CITY', 'TOWNSHIP', 'GOVERNMENT') or \
+           allnames[-1].upper() in ('INC', 'INC.', 'LLC.', 'LLC', 'COMPANY', 'LTD', 'LTD.', 'CO', 'CORP', 'CORP.', 'NA', 'N.A.', 'COOPERATIVE') or \
+           'BANK' in allnames or 'UNIVERSITY' in allnames or 'UNION' in allnames:
+            job["lastname"] = fullname
+            return job
+           
+        suffix = allnames[-1].upper().strip()
+        if suffix in ['JR', 'JR.', 'SR', 'SR.', "I", "II", "III", "IV", "1ST", "2ND", "3RD", "4TH", "5TH"]:
+            job["suffix"] = suffix
+            allnames = allnames[:-1]
+    if len(allnames) == 1:
+        job['lastname'] = allnames[0]
+    elif len(allnames) == 2:
+         job['lastname'] = allnames[0]
+         job['firstname'] = allnames[1]
+    elif len(allnames) > 2:
+         job['lastname'] = allnames[0]
+         job['firstname'] = allnames[1]
+         job['middlename'] = " ".join(allnames[2:])
+    # postprocess middlename
+    if "; " in job['middlename']:
+        job['middlename'], job['suffix'] = job['middlename'].split("; ",1)
+    for f in ('firstname', 'middlename', 'lastname', 'suffix'):
+        for c in (',','.',';'):
+            job[f] = job[f].replace(c," ")
+        while "  " in job[f]: job[f] = job[f].replace("  "," ")
+    return job
+
+def parse_fulladdress(fulladdress):
+    """ Parses fulladdress into pieces: US format. 
+        Returns dict containing address, zip, state, city """
+    
+    fulladdress = fulladdress.strip()
+    info = dict(address="", zip="", state="", city="")
+    if " " not in fulladdress:
+        info["address"] = fulladdress
+        return info
+    rest, info["zip"] = fulladdress.rsplit(" ", 1)
+    if len(info["zip"]) == 2: 
+        info['state'] = info['zip']
+        info['zip'] = ''
+    if ", " not in  rest:
+        info["address"] = rest
+        return info
+    rest, info["state"] = rest.rsplit(", ", 1)
+    if ", " not in  rest:
+        info["address"] = rest
+        return info
+    info["address"], info["city"] = rest.rsplit(", ", 1)
+    for k, v in info.items():
+        info[k] = v.strip()
+    for f in ('address', 'state', 'city', 'zip'):
+        if info[f] and info[f][-1] in (',',';','.'):
+            info[f] = info[f][:-1]
+    return info

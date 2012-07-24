@@ -1,12 +1,7 @@
 ### -*- coding: utf-8 -*- #############################################
-# Разработано компанией Стерх (http://sterch.net/)
-# Все права защищены, 2008
-#
-# Developed by Sterch (http://sterch.net/)
-# All right reserved, 2008
-#######################################################################
-# $Id: config.py 14192 2010-04-17 08:44:49Z maxp $
+# Developed by Maksym Polshcha (maxp@sterch.net)
+# All right reserved, 2012
 #######################################################################
 
-MAXREADTRIES = 2
+MAXREADTRIES = 3
 DELAY = 2

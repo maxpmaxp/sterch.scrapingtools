@@ -1,1 +1,1 @@
-Library to build scrapers.
+Library for building scrapers.

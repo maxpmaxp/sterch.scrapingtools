@@ -1,9 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
-# Разработано компанией Стерх (http://sterch.net/)
-# Все права защищены, 2008
-#
-# Developed by Sterch (http://sterch.net/)
-# All right reserved, 2008
+# Developed by Maksym Polshcha (maxp@sterch.net)
+# All right reserved, 2012
 #######################################################################
 
 """ Page downloading tools
@@ -13,11 +10,12 @@ __license__ = "ZPL"
 
 from config import MAXREADTRIES, DELAY
 from cookielib import CookieJar
+from gzip import GzipFile
 from handlers import BindableHTTPHandlerFactory
 from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory
 from random import choice
 from time import sleep
-from zope.component import getUtility
+from zope.component import getUtility, ComponentLookupError
 from zope.interface import directlyProvides
 
 import mimetypes
@@ -27,39 +25,15 @@ import urllib2
 
 cjar = CookieJar()
 
-# Load proxies
-__MY__PATH__ = os.path.dirname(os.path.abspath(__file__))
-
-try:
-    f = open(os.path.join(__MY__PATH__, "proxies.txt"),"rt")
-    proxies = map(lambda s:s.strip(), f.readlines())
-    f.close()
-    proxies = filter(lambda s:not s.startswith("#"), proxies)
-except Exception, ex:
-    print ex
-    proxies = []
-
 def getproxy():
     """ Simple proxy factory """
-    global proxies
-    return choice(proxies) if proxies else None
+    return None
 
 directlyProvides(getproxy, IProxyFactory)
 
-# Load available IPS
-try:
-    f = open(os.path.join(__MY__PATH__, "ips.txt"),"rt")
-    ips = map(lambda s:s.strip(), f.readlines())
-    f.close()
-    ips = filter(lambda s:not s.startswith("#"), ips)
-except Exception, ex:
-    print ex
-    ips = []
-
 def getip():
     """ Simple ip factory """
-    global ips
-    return choice(ips) if ips else None
+    return None
 
 directlyProvides(getip, IIPFactory)
     
@@ -69,21 +43,26 @@ def createOpener(cookies=None, headers=None, _proxies=None):
         proxy_support = urllib2.ProxyHandler(_proxies)
         handlers.append(proxy_support)
     
-    bindip = getUtility(IIPFactory)()
-    if bindip: handlers.append(BindableHTTPHandlerFactory(bindip))
-        
+    try:
+        bindip = getUtility(IIPFactory)()
+        if bindip: handlers.append(BindableHTTPHandlerFactory(bindip))
+    except ComponentLookupError:
+        pass
+    
     if cookies is not None :
         c = urllib2.HTTPCookieProcessor()
         c.cookiejar = cookies
         handlers.append(c)
     
     opener = urllib2.build_opener(*handlers)
-    
-     
+         
     if headers:
         opener.addheaders = headers
     else:
-        opener.addheaders = getUtility(IHTTPHeadersFactory)()
+        try:
+            opener.addheaders = getUtility(IHTTPHeadersFactory)()
+        except ComponentLookupError:
+            pass
     return opener
 
 def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False):
@@ -181,30 +160,40 @@ class Client(object):
         if headers:
             self.headers = headers 
         else:
-            self.headers = getUtility(IHTTPHeadersFactory)()
+            try:
+                self.headers = getUtility(IHTTPHeadersFactory)()
+            except ComponentLookupError:
+                self.headers = []
         if not noproxy: 
             if _proxies:
                 self.proxies = _proxies
             else: 
-                p = getUtility(IProxyFactory)()
-                self.proxies = {'http' : p, 'https' : p } if p else None
+                try:
+                    p = getUtility(IProxyFactory)()
+                    self.proxies = {'http' : p, 'https' : p } if p else None
+                except ComponentLookupError:
+                    self.proxies = None
         else:
             self.proxies = None
         self.lastURL = None
     
-    def readpage(self, url, data=None):
+    def readpage(self, url, data=None, extra_headers=None):
         data, realurl = readpage(url, data=data, 
                         cookies = self.cookies,
-                        headers = self.headers,
+                        headers = self.headers + extra_headers if extra_headers else self.headers,
                         _proxies = self.proxies,
                         needURL = True)
         self.lastURL = realurl
+        try:
+            data = GzipFile(fileobj=StringIO(data)).read()
+        except IOError:
+            pass
         return data
     
-    def getrealurl(self, url):
+    def getrealurl(self, url, extra_headers=None):
         """ returns real url after redirects """
         opener = createOpener(cookies = self.cookies,
-                    headers = self.headers,
+                    headers = self.headers + extra_headers if extra_headers else self.headers,
                     _proxies = self.proxies)
         
         f = opener.open(url)
@@ -212,7 +201,7 @@ class Client(object):
         f.close()
         return realURL
 
-    def post_multipart(self, url, fields, files):
+    def post_multipart(self, url, fields, files, extra_headers=None):
         """
         Post fields and files to an http host as multipart/form-data.
         fields is a sequence of (name, value) elements for regular form fields.
@@ -228,7 +217,9 @@ class Client(object):
             c = self.cookies
         else:
             c = cjar
-        opener = createOpener(cookies=c, headers=self.headers, _proxies = self.proxies)
+        opener = createOpener(cookies=c, 
+                              headers=self.headers + extra_headers if extra_headers else self.headers, 
+                              _proxies = self.proxies)
         headers = {'Content-Type': content_type,
                    'Content-Length': str(len(body))}
         request = urllib2.Request(url, body, headers)
@@ -248,10 +239,17 @@ class Client(object):
                 opener.close()
                 sleep(DELAY)
                 ntries += 1
-                opener = createOpener(cookies=c, headers=headers, _proxies = self.proxies)
+                opener = createOpener(cookies=c, 
+                                      headers=self.headers + extra_headers if extra_headers else self.headers, 
+                                      _proxies = self.proxies)
+        
         if not downloaded : 
             print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries,ex)
             page = ""
+        try:
+            page = GzipFile(fileobj=StringIO(page)).read()
+        except IOError:
+            pass
         return page
     
 class BaseCaptchaAwareClient(Client):

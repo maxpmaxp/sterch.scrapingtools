@@ -7,10 +7,10 @@ def read(*rnames):
 
 setup(
     name='sterch.scrapingtools',
-    version='0.1.2',
+    version='0.2',
     url='http://pypi.sterch.net',
     license='ZPL',
-    description='Library to build scrapers',
+    description='Library for building scrapers',
     author='Polsha Maxim',
     author_email='maxp@sterch.net',
     long_description='\n\n'.join([
