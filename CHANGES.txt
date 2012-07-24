@@ -1,0 +1,14 @@
+Changelog
+*********
+
+0.2
+=======================
+ * corrected client behaviour when no proxies/ips factories are defined
+ * deflate/gzip encoding support added
+ * option to add extra headers in Client.readpage
+ * obsolated files, classes and functions were removed
+ * decaptcher fixed
+ * copyright headers were changed
+ * new browser headers were added
+ * parse_fulladdress, parse_fullname functions were added
+ 
