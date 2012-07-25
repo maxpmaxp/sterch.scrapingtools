@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.2.1 (2012-07-25)
+=======================
+ * missing RLock import was added
+ 
 0.2 (2012-07-25)
 =======================
  * corrected client behaviour when no proxies/ips factories are defined

@@ -5,7 +5,9 @@
 
 """Text processing functions
 """
-    
+
+from threading import RLock
+
 class DuplicateValueError(Exception):
     """ Exception to raise duplicate value error """
 
