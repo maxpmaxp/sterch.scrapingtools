@@ -24,6 +24,9 @@ import os.path
 import urllib
 import urllib2 
 
+class ClientError(Exception):
+    """ Generic cleint's exception """
+
 cjar = CookieJar()
 
 def getproxy():
@@ -81,6 +84,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
         c = cjar
     opener = createOpener(cookies=c, headers=headers, _proxies = _proxies)
     realURL=''
+    exc = ClientError("Download failed for unknown reason")
     while not downloaded and ntries < MAXREADTRIES:
         try: 
             if type(data) is dict:
@@ -95,13 +99,9 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
             downloaded = True
             opener.close()
         except Exception, ex:
+            exc = ex
             if type(ex) == urllib2.HTTPError:
                 print "ERROR: Can't read %s. Error %d" % (url, ex.code)
-                msg = "Error %d" % ex.code
-                if needURL:
-                    return (msg, url)
-                else:
-                    return msg
             else:
                 print "ERROR: network error (%s)" % url, ex
             opener.close()
@@ -111,7 +111,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
             
     if not downloaded : 
         print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries,ex)
-        page = ""
+        raise ex
      
     if needURL:
         return (page, realURL)
@@ -181,17 +181,17 @@ class Client(object):
         self.lastURL = None
     
     def readpage(self, url, data=None, extra_headers=None):
-        data, realurl = readpage(url, data=data, 
+        page, realurl = readpage(url, data=data, 
                         cookies = self.cookies,
                         headers = self.headers + extra_headers if extra_headers else self.headers,
                         _proxies = self.proxies,
                         needURL = True)
         self.lastURL = realurl
         try:
-            data = GzipFile(fileobj=StringIO(data)).read()
-        except IOError:
+            page = GzipFile(fileobj=StringIO(page)).read()
+        except:
             pass
-        return data
+        return page
     
     def getrealurl(self, url, extra_headers=None):
         """ returns real url after redirects """
@@ -226,6 +226,7 @@ class Client(object):
         headers = {'Content-Type': content_type,
                    'Content-Length': str(len(body))}
         request = urllib2.Request(url, body, headers)
+        exc = ClientError("Download failed for unknown reason")
         
         while not downloaded and ntries < MAXREADTRIES:     
             try:     
@@ -235,6 +236,7 @@ class Client(object):
                 downloaded = True
                 opener.close()
             except Exception, ex:
+                exc = ex
                 if type(ex) == urllib2.HTTPError:
                     print "ERROR: Can't read %s. Error %d" % (url, ex.code)
                 else:
@@ -248,10 +250,10 @@ class Client(object):
         
         if not downloaded : 
             print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries,ex)
-            page = ""
+            raise exc
         try:
             page = GzipFile(fileobj=StringIO(page)).read()
-        except IOError:
+        except:
             pass
         return page
     

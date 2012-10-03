@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.2.2 (2012-10-03)
+==================
+ * a bug with gzipped content processing fixed
+ * client's read methods re-raise exceptions when faild to download an URL instead returning error strings silently 
+
 0.2.1 (2012-07-25)
 =======================
  * missing RLock import was added
