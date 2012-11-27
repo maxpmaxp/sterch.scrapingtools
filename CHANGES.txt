@@ -1,6 +1,14 @@
 Changelog
 *********
 
+0.2.5 (2012-11-27)
+==================
+ * fullnames parse can accept a schema as an argument. The schema defines an order of lastname, firstname, middlenames and suffix in a fullname.
+
+0.2.4 (2012-11-16)
+==================
+ * some new address and names parsing functions were added
+
 0.2.3 (2012-10-03)
 ==================
  * missing entities.csv was added to the package

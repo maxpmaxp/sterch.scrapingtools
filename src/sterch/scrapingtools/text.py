@@ -11,6 +11,7 @@ __license__ = "ZPL"
 import csv
 import os.path
 import re
+import fullname as modfullname
 
 __MY__PATH__ = os.path.dirname(os.path.abspath(__file__))
 glEntities = dict([p for p in csv.reader(open(os.path.join(__MY__PATH__,"entities.csv"),"rU")) ]) 
@@ -60,9 +61,14 @@ def tofilename(name):
     for s in illegal : n = n.replace(s,'')
     return n
 
-def parse_fullname(fullname):
-    """ Parses a fullname into pieces: firstname, lastname, middlename, suffix.
-        Returns dict """
+def parse_fullname(fullname, schema="lfms"):
+    """ Parse fullname using a schema.
+        l - lastname
+        m - firstname
+        f - firstname
+        s - suffix
+        into pieces: firstname, lastname, middlename, suffix.
+        Returns dict     """
     job = dict()
     job['firstname'] = job['lastname'] = job['middlename'] = job['suffix'] = ''
     if ", " in fullname:
@@ -84,13 +90,18 @@ def parse_fullname(fullname):
             allnames = allnames[:-1]
     if len(allnames) == 1:
         job['lastname'] = allnames[0]
-    elif len(allnames) == 2:
-         job['lastname'] = allnames[0]
-         job['firstname'] = allnames[1]
-    elif len(allnames) > 2:
-         job['lastname'] = allnames[0]
-         job['firstname'] = allnames[1]
-         job['middlename'] = " ".join(allnames[2:])
+    else:
+        if schema == "lfms":
+            parser = modfullname.parse_lfms
+        elif schema == "lmfs":
+            parser = modfullname.parse_lmfs
+        elif schema == "fmls":
+            parser = modfullname.parse_fmls
+        elif schema == "flms":
+            parser = modfullname.parse_flms
+        else:
+            raise ValueError("Unknown fullname schema %s" % schema)
+    job.update(parser(allnames))
     # postprocess middlename
     if "; " in job['middlename']:
         job['middlename'], job['suffix'] = job['middlename'].split("; ",1)
@@ -98,6 +109,7 @@ def parse_fullname(fullname):
         for c in (',','.',';'):
             job[f] = job[f].replace(c," ")
         while "  " in job[f]: job[f] = job[f].replace("  "," ")
+
     return job
 
 def parse_fulladdress(fulladdress):
@@ -127,3 +139,54 @@ def parse_fulladdress(fulladdress):
         if info[f] and info[f][-1] in (',',';','.'):
             info[f] = info[f][:-1]
     return info
+
+def remove_aka(fullname):
+    """ Removes AKA from the fullname given """
+    for aka in ("AKA ", " AKA", "A.K.A", "A/K/A"):
+        if aka in fullname.upper():
+            fullname = fullname.split(aka,1)[0]
+    return fullname
+
+def is_person(fullname):
+    """ Checks whether a name given is person's name """
+    return not (any(map(lambda e:fullname.upper().strip().endswith(e), 
+                            [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST'])) or \
+               any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
+                                    ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
+                                    'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT", 
+                                    "COMMONWEALTH", "CONDOMINIUM", "VILLAGE", "SHOP", "APARTMENTS", "&", "DBA", " AND ", "BUREAU", "TWP", "MARKET",
+                                    "STUDIO", "ASSOC", ' TRUST ', 'NETWORK', 'LIMITED', 'DEPARTMENT', 'UNIT', 'CREDIT', 'TENANT', 'UNKNOWN', 'N/A'])))
+
+def parse_city_state_zip(city_state_zip):
+    """ Parses city_state_zip into a dict """
+    info = dict(city="", state="", zip="")
+    try:
+        info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)
+    except:
+        try:
+            p1, p2 = city_state_zip.rsplit(" ", 1)
+            # check if p1 is US zip :
+            if all(map(lambda x:x in "0123456789-", p2)):
+                info['state'], info['zip'] = p1, p2
+            else:
+                info['city'], info['state'] = p1, p2
+        except:
+            info['city'] = city_state_zip
+    for f in ('city', 'state', 'zip'):
+        info[f] = info[f].replace(u'\xa0','')
+    info['state'] = info['state'].upper()
+    return info
+
+def normalize_address(address):
+    """ Address must start with PO, RR, or a number """
+    addr_headers = ('0','1','2','3','4','5','6','7','8','9',
+                    'PO ', "P O", "P.O.", "P. O.", 
+                    'RR ', "R R", "R.R.", "R. R.")
+    addr = address.strip().upper() 
+    for suffix in addr_headers:
+        if addr.startswith(suffix):
+            return addr    
+    for suffix in addr_headers:
+        if suffix in addr:
+            return addr[addr.find(suffix):]    
+    return address
