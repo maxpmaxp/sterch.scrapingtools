@@ -101,7 +101,7 @@ def parse_fullname(fullname, schema="lfms"):
             parser = modfullname.parse_flms
         else:
             raise ValueError("Unknown fullname schema %s" % schema)
-    job.update(parser(allnames))
+        job.update(parser(allnames))
     # postprocess middlename
     if "; " in job['middlename']:
         job['middlename'], job['suffix'] = job['middlename'].split("; ",1)
@@ -142,10 +142,11 @@ def parse_fulladdress(fulladdress):
 
 def remove_aka(fullname):
     """ Removes AKA from the fullname given """
+    fu = fullname.upper()
     for aka in ("AKA ", " AKA", "A.K.A", "A/K/A"):
-        if aka in fullname.upper():
-            fullname = fullname.split(aka,1)[0]
-    return fullname
+        if aka in fu:
+            fu = fu.split(aka,1)[0]
+    return fu
 
 def is_person(fullname):
     """ Checks whether a name given is person's name """
@@ -174,6 +175,7 @@ def parse_city_state_zip(city_state_zip):
             info['city'] = city_state_zip
     for f in ('city', 'state', 'zip'):
         info[f] = info[f].replace(u'\xa0','')
+        if info[f].endswith(",") : info[f] = info[f][:-1]
     info['state'] = info['state'].upper()
     return info
 
