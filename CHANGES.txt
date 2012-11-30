@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.2.6 (2012-11-30)
+==================
+ * Issues in fullname parsing and AKA removing were fixed
+
 0.2.5 (2012-11-27)
 ==================
  * fullnames parse can accept a schema as an argument. The schema defines an order of lastname, firstname, middlenames and suffix in a fullname.
