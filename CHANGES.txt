@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.2.7 (2013-01-14)
+==================
+ * is_fullname_suffix methos added
+ * new "lsfm" and "lsmf" fullname parsing formats were added
+
 0.2.6 (2012-11-30)
 ==================
  * Issues in fullname parsing and AKA removing were fixed

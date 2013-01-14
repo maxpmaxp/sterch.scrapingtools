@@ -16,6 +16,10 @@ import fullname as modfullname
 __MY__PATH__ = os.path.dirname(os.path.abspath(__file__))
 glEntities = dict([p for p in csv.reader(open(os.path.join(__MY__PATH__,"entities.csv"),"rU")) ]) 
 
+def is_fullname_suffix(s):
+    """ Returns Trus if S is a full name suffix """
+    return s.upper().strip() in ['JUNIOR', 'SENIOR', 'JR', 'JR.', 'SR', 'SR.', "I", "II", "III", "IV", "V", "VI", "1ST", "2ND", "3RD", "4TH", "5TH", "6TH"]
+
 def striptags(text):
     """ strips tags from the text"""
     return re.sub("<[^>]+>", " ", text)
@@ -73,9 +77,10 @@ def parse_fullname(fullname, schema="lfms"):
     job['firstname'] = job['lastname'] = job['middlename'] = job['suffix'] = ''
     if ", " in fullname:
         _allnames = fullname.split(", ",1)
-        allnames = [_allnames[0],] + _allnames[1].split()
+        allnames = [_allnames[0],] + _allnames[1].replace(","," ").split()
     else:
-        allnames = filter(None, fullname.split())
+        allnames = fullname.split()
+    allnames = filter(None, allnames)
     job["suffix"] = ''
     if allnames:
         if allnames[0].upper() in ('STATE', 'CITY', 'TOWNSHIP', 'GOVERNMENT') or \
@@ -83,17 +88,25 @@ def parse_fullname(fullname, schema="lfms"):
            'BANK' in allnames or 'UNIVERSITY' in allnames or 'UNION' in allnames:
             job["lastname"] = fullname
             return job
-           
-        suffix = allnames[-1].upper().strip()
-        if suffix in ['JR', 'JR.', 'SR', 'SR.', "I", "II", "III", "IV", "1ST", "2ND", "3RD", "4TH", "5TH"]:
-            job["suffix"] = suffix
+        suffix = ""
+        if schema.endswith("s"):
+            # suffix comes last
+            suffix = allnames[-1].upper().strip()
             allnames = allnames[:-1]
+        if schema[1] == "s":   
+            # suffix comes 2nd
+            if len(allnames) > 1:
+                suffix = allnames[1]
+                allnames = [allnames[0],] + allnames[2:]
+        if suffix and is_fullname_suffix(suffix):
+            job["suffix"] = suffix
+            
     if len(allnames) == 1:
         job['lastname'] = allnames[0]
     else:
-        if schema == "lfms":
+        if schema in ("lfms", "lsfm"):
             parser = modfullname.parse_lfms
-        elif schema == "lmfs":
+        elif schemain ("lmfs", "lsmf"):
             parser = modfullname.parse_lmfs
         elif schema == "fmls":
             parser = modfullname.parse_fmls
