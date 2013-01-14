@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.2.8 (2013-01-14)
+==================
+ * fullname parser issue fixed
+ 
 0.2.7 (2013-01-14)
 ==================
  * is_fullname_suffix methos added

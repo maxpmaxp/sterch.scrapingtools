@@ -92,14 +92,16 @@ def parse_fullname(fullname, schema="lfms"):
         if schema.endswith("s"):
             # suffix comes last
             suffix = allnames[-1].upper().strip()
-            allnames = allnames[:-1]
+            if suffix and is_fullname_suffix(suffix):
+                job["suffix"] = suffix
+                allnames = allnames[:-1]
         if schema[1] == "s":   
             # suffix comes 2nd
             if len(allnames) > 1:
                 suffix = allnames[1]
-                allnames = [allnames[0],] + allnames[2:]
-        if suffix and is_fullname_suffix(suffix):
-            job["suffix"] = suffix
+                if suffix and is_fullname_suffix(suffix):
+                    job["suffix"] = suffix
+                    allnames = [allnames[0],] + allnames[2:]
             
     if len(allnames) == 1:
         job['lastname'] = allnames[0]
