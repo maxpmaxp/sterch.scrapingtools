@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.2.9 (2013-01-16)
+==================
+ * remove_aka and parse_fullname were improved
+ * fullname parser issue fixed
+
 0.2.8 (2013-01-14)
 ==================
  * fullname parser issue fixed

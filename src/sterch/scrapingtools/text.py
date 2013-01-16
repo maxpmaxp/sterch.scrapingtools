@@ -108,7 +108,7 @@ def parse_fullname(fullname, schema="lfms"):
     else:
         if schema in ("lfms", "lsfm"):
             parser = modfullname.parse_lfms
-        elif schemain ("lmfs", "lsmf"):
+        elif schema in ("lmfs", "lsmf"):
             parser = modfullname.parse_lmfs
         elif schema == "fmls":
             parser = modfullname.parse_fmls
@@ -124,7 +124,10 @@ def parse_fullname(fullname, schema="lfms"):
         for c in (',','.',';'):
             job[f] = job[f].replace(c," ")
         while "  " in job[f]: job[f] = job[f].replace("  "," ")
-
+    # I and V are suffixes only if there is a middlename
+    if not job["middlename"] and job["suffix"].upper() in ('V', 'I'):
+        job["middlename"] = job["suffix"]
+        job["suffix"] = ""
     return job
 
 def parse_fulladdress(fulladdress):
@@ -158,10 +161,10 @@ def parse_fulladdress(fulladdress):
 def remove_aka(fullname):
     """ Removes AKA from the fullname given """
     fu = fullname.upper()
-    for aka in ("AKA ", " AKA", "A.K.A", "A/K/A"):
+    for aka in ("AKA ", " AKA", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A "):
         if aka in fu:
             fu = fu.split(aka,1)[0]
-    return fu
+    return fu.strip()
 
 def is_person(fullname):
     """ Checks whether a name given is person's name """
