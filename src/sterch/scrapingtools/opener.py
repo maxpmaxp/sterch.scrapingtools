@@ -10,6 +10,7 @@ __license__ = "ZPL"
 
 from config import MAXREADTRIES, DELAY
 from cookielib import CookieJar
+from copy import copy
 from cStringIO import StringIO
 from gzip import GzipFile
 from handlers import BindableHTTPHandlerFactory
@@ -91,7 +92,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
                 topost = urllib.urlencode(data)
             else:
                 topost = data
-            request = urllib2.Request(url, topost)   
+            request = urllib2.Request(url, topost, dict(headers)) if headers else urllib2.Request(url, topost)
             f = opener.open(request)
             if needURL: realURL = f.geturl()
             page = f.read()
@@ -287,3 +288,13 @@ class BaseCaptchaAwareClient(Client):
                 ntries += 1
             if not is_solved: return ''
         return page
+    
+def clone_client(c):
+    """ Completely copies client and its states """
+    clone = copy(c)
+    clone.asp_state = copy(c.asp_state)
+    clone.cookies = copy(c.cookies)
+    clone.proxies = copy(c.proxies)
+    clone.headers = copy(c.headers)
+    clone.lastURL = c.lastURL
+    return clone

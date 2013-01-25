@@ -210,3 +210,44 @@ def normalize_address(address):
         if suffix in addr:
             return addr[addr.find(suffix):]    
     return address
+
+def get_block(page, start, end):
+    """ Returns a block as described by start and end markers.
+        If start marker not in page - returns none
+        If end marker is not in page - returns all after the start marker
+    """
+    if page is None: return None
+    if start in page:
+        return page.split(start,1)[1].split(end,1)[0]
+
+def get_head(page, marker):
+    """ Returns page content before the marker """
+    if page is None: return None
+    if marker in page:
+        return page.split(marker,1)[0]
+    
+def get_tail(page, marker):
+    """ Returns page content after the marker """
+    if page is None: return None
+    if marker in page:
+        return page.split(marker,1)[1]
+
+def parse_ff_mapping(page, ff_mapping, end_marker):
+    """ Parses fields mapping """
+    info = dict()
+    for k,v in ff_mapping.iteritems():
+        info[k] = normalize(page.split(v,1)[1].split(end_marker,1)[0]) if v in page else ''
+    return info
+
+def walk_table(page, row_marker="</tr>", cell_marker="</td>", min_cols_number=None, do_normalize=False, use_start_markers=False):
+    """ Generates table rows splitted by row and cell markers as lists.
+        if normalize  ---- normalizes the result,
+        if min_cols_number is not None - filters all rows with a number of columns less then the one.
+        Normally row_marker and cell_marker mark the end on the block except when use_start_markers is set to True
+    """
+    row_slices = page.split(row_marker)[:-1] if not use_start_markers else page.split(row_marker)[:-1]
+    for row in row_slices:
+        cols = row.split(cell_marker)[:-1] if not use_start_markers else row.split(cell_marker)[:-1]
+        if min_cols_number and len(cols) < min_cols_number: continue
+        if do_normalize: cols = map(normalize, cols)
+        yield cols

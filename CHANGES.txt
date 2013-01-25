@@ -1,6 +1,12 @@
 Changelog
 *********
 
+0.3 (2013-01-25)
+==================
+ * headers issue in sending request fixed
+ * new functions for parsing pages: get_head, get_block, get_tail, walk_table, parse_ff_mapping were added
+ * function clone_client for cloning a Client object added
+
 0.2.9 (2013-01-16)
 ==================
  * remove_aka and parse_fullname were improved
