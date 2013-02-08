@@ -55,6 +55,7 @@ def normalize(s):
     ss = ss.replace("\r",' ')
     ss = ss.replace("\n",' ')
     ss = ss.replace("\t",' ')
+    ss = ss.replace(u"\xa0",' ')
     ss = ss.strip()
     while '  ' in ss: ss=ss.replace('  ', ' ')
     return ss

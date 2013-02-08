@@ -1,6 +1,11 @@
 Changelog
 *********
 
+
+0.3.1 (2013-02-08)
+==================
+ * minor issue with 'u\xa0' character in *normalize* fixed
+ 
 0.3 (2013-01-25)
 ==================
  * headers issue in sending request fixed
