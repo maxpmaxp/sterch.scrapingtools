@@ -8,6 +8,8 @@
 __author__  = "Polshcha Maxim (maxp@sterch.net)"
 __license__ = "ZPL"
 
+from text import is_person
+
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
     return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED')))

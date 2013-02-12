@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.3 (2013-02-12)
+==================
+ * missing import fixed
+
 0.3.2 (2013-02-12)
 ==================
  * several useful methods for US courts scraping added
