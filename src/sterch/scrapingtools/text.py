@@ -76,6 +76,9 @@ def parse_fullname(fullname, schema="lfms"):
         Returns dict     """
     job = dict()
     job['firstname'] = job['lastname'] = job['middlename'] = job['suffix'] = ''
+    if not is_person(fullname):
+        job["lastname"] = fullname
+        return job
     if ", " in fullname:
         _allnames = fullname.split(", ",1)
         allnames = [_allnames[0],] + _allnames[1].replace(","," ").split()
@@ -84,11 +87,6 @@ def parse_fullname(fullname, schema="lfms"):
     allnames = filter(None, allnames)
     job["suffix"] = ''
     if allnames:
-        if allnames[0].upper() in ('STATE', 'CITY', 'TOWNSHIP', 'GOVERNMENT') or \
-           allnames[-1].upper() in ('INC', 'INC.', 'LLC.', 'LLC', 'COMPANY', 'LTD', 'LTD.', 'CO', 'CORP', 'CORP.', 'NA', 'N.A.', 'COOPERATIVE') or \
-           'BANK' in allnames or 'UNIVERSITY' in allnames or 'UNION' in allnames:
-            job["lastname"] = fullname
-            return job
         suffix = ""
         if schema.endswith("s"):
             # suffix comes last
@@ -162,7 +160,7 @@ def parse_fulladdress(fulladdress):
 def remove_aka(fullname):
     """ Removes AKA from the fullname given """
     fu = fullname.upper()
-    for aka in ("AKA ", " AKA", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A "):
+    for aka in ("AKA ", " AKA", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.'):
         if aka in fu:
             fu = fu.split(aka,1)[0]
     return fu.strip()
@@ -170,12 +168,16 @@ def remove_aka(fullname):
 def is_person(fullname):
     """ Checks whether a name given is person's name """
     return not (any(map(lambda e:fullname.upper().strip().endswith(e), 
-                            [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST'])) or \
+                            [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST', ' COURT',
+                             " ORG", " ORG."])) or \
                any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
                                     ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
-                                    'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT", 
+                                    'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
                                     "COMMONWEALTH", "CONDOMINIUM", "VILLAGE", "SHOP", "APARTMENTS", "&", "DBA", " AND ", "BUREAU", "TWP", "MARKET",
-                                    "STUDIO", "ASSOC", ' TRUST ', 'NETWORK', 'LIMITED', 'DEPARTMENT', 'UNIT', 'CREDIT', 'TENANT', 'UNKNOWN', 'N/A'])))
+                                    "STUDIO", "ASSOC", ' TRUST ', 'NETWORK', 'LIMITED', 'DEPARTMENT', 'UNIT', 'CREDIT', 'TENANT', 'UNKNOWN', 'N/A', 'PRISON',
+                                    "HOSPITAL", "OFFICE", "AGENCY", "ORGANISATION", "ORGANIZATION", "CLINIC", "CLINIQUE", "BANQUE", "SERVICE", ])) or \
+                any(map(lambda e:fullname.upper().strip().startswith(e), 
+                            ['COURT ', 'BANK ', 'TRUST ', ])))
 
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """

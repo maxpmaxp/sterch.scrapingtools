@@ -4,6 +4,7 @@
 #######################################################################
 
 # Make it a Python package
+from courts import is_plaintiff, is_defendant, is_attorney, extract_description, extract_date, extract_money, is_john_doe
 from opener import createOpener, readpage, Client, BaseCaptchaAwareClient, clone_client
 from output import start_chunked_stdout, stop_chunked_stdout
 from synclist import SyncList, DuplicateValueError
