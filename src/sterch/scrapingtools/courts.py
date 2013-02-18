@@ -8,6 +8,7 @@
 __author__  = "Polshcha Maxim (maxp@sterch.net)"
 __license__ = "ZPL"
 
+import re
 from text import is_person
 
 def is_plaintiff(descr):

@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.4 (2013-02-18)
+==================
+ * missing import fixed
+
 0.3.3 (2013-02-12)
 ==================
  * missing import fixed
