@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012
+# All right reserved, 2012, 2013
 #######################################################################
 
 """ Fullname parsing utilities. Internal use only.

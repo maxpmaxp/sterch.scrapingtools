@@ -1,6 +1,14 @@
 Changelog
 *********
 
+0.3.5 (2013-02-20)
+==================
+ * clone_client issue when asp_state is missing fixed
+ * stipping spaces from name pieces in parse_fullname
+ * list of markers extended in is_person
+ * is_valid_attorney added
+ * smart_cmp added
+
 0.3.4 (2013-02-18)
 ==================
  * missing import fixed

@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012
+# All right reserved, 2012,2013
 #######################################################################
 
 """Text processing functions
@@ -12,6 +12,8 @@ import csv
 import os.path
 import re
 import fullname as modfullname
+
+from string import strip
 
 __MY__PATH__ = os.path.dirname(os.path.abspath(__file__))
 glEntities = dict([p for p in csv.reader(open(os.path.join(__MY__PATH__,"entities.csv"),"rU")) ]) 
@@ -127,6 +129,9 @@ def parse_fullname(fullname, schema="lfms"):
     if not job["middlename"] and job["suffix"].upper() in ('V', 'I'):
         job["middlename"] = job["suffix"]
         job["suffix"] = ""
+    # strip spaces
+    for f in ("firstname", "lastname", "middlename", "suffix"):
+        job[f] = job[f].strip()
     return job
 
 def parse_fulladdress(fulladdress):
@@ -175,7 +180,10 @@ def is_person(fullname):
                                     'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
                                     "COMMONWEALTH", "CONDOMINIUM", "VILLAGE", "SHOP", "APARTMENTS", "&", "DBA", " AND ", "BUREAU", "TWP", "MARKET",
                                     "STUDIO", "ASSOC", ' TRUST ', 'NETWORK', 'LIMITED', 'DEPARTMENT', 'UNIT', 'CREDIT', 'TENANT', 'UNKNOWN', 'N/A', 'PRISON',
-                                    "HOSPITAL", "OFFICE", "AGENCY", "ORGANISATION", "ORGANIZATION", "CLINIC", "CLINIQUE", "BANQUE", "SERVICE", ])) or \
+                                    "HOSPITAL", "OFFICE", "AGENCY", "ORGANISATION", "ORGANIZATION", "CLINIC", "CLINIQUE", "BANQUE", "SERVICE", 
+                                    "CORPORATION", "CHURCH", "HOTEL", "SUITES", "NATIONAL", "SOCIETY", "BUSINESS", "CENTER", "SECURITY",
+                                    "FINANCE", "EDUCATION", "MEDICAL", "OFFICER", "MANAGEMENT", "MGMT", "EQUIPMENT", "INSURANCE", "GROUP",
+                                    "COLLEGE", "DEVELOPMENT", "RESTAURANT", "SCHOOL", "COURTHOUSE"])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', ])))
 
@@ -254,3 +262,10 @@ def walk_table(page, row_marker="</tr>", cell_marker="</td>", min_cols_number=No
         if min_cols_number and len(cols) < min_cols_number: continue
         if do_normalize: cols = map(normalize, cols)
         yield cols
+        
+def smart_cmp(s1, s2):
+    """ Compares 2 strings as sets of words"""
+    _s1, _s2 = map(lambda s:s.upper().replace(".", " ").replace(",", " ").strip(),  (s1, s2))
+    _s1, _s2 = map(lambda s: sorted(filter(None, s.split())), (_s1, _s2))
+    _s1, _s2 = map(lambda s: map(strip, s), (_s1, _s2))
+    return _s1 == _s2

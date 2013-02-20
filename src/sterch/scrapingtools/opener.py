@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012
+# All right reserved, 2012, 2013
 #######################################################################
 
 """ Page downloading tools
@@ -292,7 +292,8 @@ class BaseCaptchaAwareClient(Client):
 def clone_client(c):
     """ Completely copies client and its states """
     clone = copy(c)
-    clone.asp_state = copy(c.asp_state)
+    if hasattr(c, 'asp_state'):
+        clone.asp_state = copy(c.asp_state)
     clone.cookies = copy(c.cookies)
     clone.proxies = copy(c.proxies)
     clone.headers = copy(c.headers)

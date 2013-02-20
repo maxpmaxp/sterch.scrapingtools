@@ -9,7 +9,7 @@ __author__  = "Polshcha Maxim (maxp@sterch.net)"
 __license__ = "ZPL"
 
 import re
-from text import is_person
+from text import is_person, smart_cmp
 
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
@@ -22,6 +22,16 @@ def is_defendant(descr):
 def is_attorney(descr):
     """ If a string description is a attorney description """
     return any(map(lambda s: s in descr.upper(), ('ATTORNEY','ATTNY')))
+
+def is_valid_attorney(attorney, defendant_fullname=None):
+    """ Returns False if attorney is empty or is defendant """
+    if not attorney: return False
+    if defendant_fullname:
+        if smart_cmp(defendant_fullname, attorney): return False
+    attorney = attorney.upper()
+    if any(map(lambda s: s in attorney, ['NO ATTORNEY', 'PRO SE', 'UNKNOWN' , 'PRO PRE', "PROSE", "PROPRE", "PROPER", "PRO PER"])):
+           return False
+    return True
 
 def extract_description(page, default=None):
     """ Extracts civil case description. Usually it is used for a docket """
