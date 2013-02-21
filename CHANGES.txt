@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.7 (2013-02-21)
+==================
+ * is_defendant, is_plaintiff, is_valid_attorney were improved
+
 0.3.6 (2013-02-21)
 ==================
  * is_valid_attorney improved

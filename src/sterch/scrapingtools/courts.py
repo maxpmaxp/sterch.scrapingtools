@@ -13,11 +13,11 @@ from text import is_person, smart_cmp, normalize
 
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
-    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED')))
+    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PLTF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED')))
     
 def is_defendant(descr):
     """ If a string description is a defendant description """
-    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('DEFENDANT','RESPONDENT','RESPONDER','RESTRAINED')))
+    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('DEFENDANT', 'DEFT', 'RESPONDENT', 'RESPONDER', 'RESTRAINED')))
 
 def is_attorney(descr):
     """ If a string description is a attorney description """
@@ -29,7 +29,7 @@ def is_valid_attorney(attorney, defendant_fullname=None):
     if defendant_fullname:
         if smart_cmp(defendant_fullname, attorney): return False
     attorney = normalize(attorney).upper().strip()
-    if any(map(lambda s: s in attorney, ['NO ATTORNEY', 'PRO SE', 'UNKNOWN' , 'PRO PRE', "PROSE", "PROPRE", "PROPER", "PRO PER",
+    if any(map(lambda s: s in attorney, ['NO ATTORNEY', 'PRO SE', 'UNKNOWN' , 'PRO PRE', "PROSE", "PROPRE", "PROPER", "PRO PER", 'UNREPRESENTED',
                                          'N/A', 'NO-ATTORNEY', 'NO ATTORNEY', 'PRO SE', 'UNKNOWN', 'PUBLIC', 'DEFENDER', 'DEFENDANT', 'RESPONDENT','RESPONDER',])) \
         or any(map(lambda s: s==attorney, ['NO', 'NONE', 'NA', 'N.A.', 'UNK', 'UNKNWN',])):
            return False
