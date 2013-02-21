@@ -9,7 +9,7 @@ __author__  = "Polshcha Maxim (maxp@sterch.net)"
 __license__ = "ZPL"
 
 import re
-from text import is_person, smart_cmp
+from text import is_person, smart_cmp, normalize
 
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
@@ -28,8 +28,10 @@ def is_valid_attorney(attorney, defendant_fullname=None):
     if not attorney: return False
     if defendant_fullname:
         if smart_cmp(defendant_fullname, attorney): return False
-    attorney = attorney.upper()
-    if any(map(lambda s: s in attorney, ['NO ATTORNEY', 'PRO SE', 'UNKNOWN' , 'PRO PRE', "PROSE", "PROPRE", "PROPER", "PRO PER"])):
+    attorney = normalize(attorney).upper().strip()
+    if any(map(lambda s: s in attorney, ['NO ATTORNEY', 'PRO SE', 'UNKNOWN' , 'PRO PRE', "PROSE", "PROPRE", "PROPER", "PRO PER",
+                                         'N/A', 'NO-ATTORNEY', 'NO ATTORNEY', 'PRO SE', 'UNKNOWN', 'PUBLIC', 'DEFENDER', 'DEFENDANT', 'RESPONDENT','RESPONDER',])) \
+        or any(map(lambda s: s==attorney, ['NO', 'NONE', 'NA', 'N.A.', 'UNK', 'UNKNWN',])):
            return False
     return True
 

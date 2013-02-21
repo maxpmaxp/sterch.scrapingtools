@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.6 (2013-02-21)
+==================
+ * is_valid_attorney improved
+
 0.3.5 (2013-02-20)
 ==================
  * clone_client issue when asp_state is missing fixed
