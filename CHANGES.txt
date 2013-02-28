@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.8 (2013-02-28)
+==================
+ * is_person, remove_aka, normalize_address were improved
+
 0.3.7 (2013-02-21)
 ==================
  * is_defendant, is_plaintiff, is_valid_attorney were improved

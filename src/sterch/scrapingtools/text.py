@@ -13,6 +13,7 @@ import os.path
 import re
 import fullname as modfullname
 
+from itertools import product
 from string import strip
 
 __MY__PATH__ = os.path.dirname(os.path.abspath(__file__))
@@ -165,7 +166,7 @@ def parse_fulladdress(fulladdress):
 def remove_aka(fullname):
     """ Removes AKA from the fullname given """
     fu = fullname.upper()
-    for aka in ("AKA ", " AKA", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.'):
+    for aka in ("AKA ", " AKA", "A.K.A.", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.'):
         if aka in fu:
             fu = fu.split(aka,1)[0]
     return fu.strip()
@@ -174,7 +175,7 @@ def is_person(fullname):
     """ Checks whether a name given is person's name """
     return not (any(map(lambda e:fullname.upper().strip().endswith(e), 
                             [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST', ' COURT',
-                             " ORG", " ORG."])) or \
+                             " ORG", " ORG.", " CTY", " TREAS", " TAX", " DEPT", " DEPT.", " B M V"])) or \
                any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
                                     ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
                                     'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
@@ -183,9 +184,13 @@ def is_person(fullname):
                                     "HOSPITAL", "OFFICE", "AGENCY", "ORGANISATION", "ORGANIZATION", "CLINIC", "CLINIQUE", "BANQUE", "SERVICE", 
                                     "CORPORATION", "CHURCH", "HOTEL", "SUITES", "NATIONAL", "SOCIETY", "BUSINESS", "CENTER", "SECURITY",
                                     "FINANCE", "EDUCATION", "MEDICAL", "OFFICER", "MANAGEMENT", "MGMT", "EQUIPMENT", "INSURANCE", "GROUP",
-                                    "COLLEGE", "DEVELOPMENT", "RESTAURANT", "SCHOOL", "COURTHOUSE"])) or \
+                                    "COLLEGE", "DEVELOPMENT", "RESTAURANT", "SCHOOL", "COURTHOUSE", " CTY ", " TREAS ", "TREASURER",
+                                    "COMMISSION", "INDUSTRIAL", "HEIRS", "DIRECTOR", "ADMINISTRATOR", "HOUSING", "HOMESTEAD", "SURVIVING", 
+                                    "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
+                                    "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
+                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY",])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
-                            ['COURT ', 'BANK ', 'TRUST ', ])))
+                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V "])))
 
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
@@ -209,10 +214,14 @@ def parse_city_state_zip(city_state_zip):
     return info
 
 def normalize_address(address):
-    """ Address must start with PO, RR, or a number """
-    addr_headers = ('0','1','2','3','4','5','6','7','8','9',
-                    'PO ', "P O", "P.O.", "P. O.", 
-                    'RR ', "R R", "R.R.", "R. R.")
+    """ An address must start with an integer, 
+        the letter P, (PO BOX, P.O. BOX, etc), RR, the word Rural (as in Rural Route), 
+        HC, the word Highway (as in Highway Contract 77…), 
+        or a letter followed immediate by at least two integers, i.e. (like this W7905 State Road 29, or N4116 Springbrook Rd) """
+    addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", "P. O.", 
+                    'RURAL ROUTE', 'RR ', "R R", "R.R.", "R. R.",
+                    'HIGHWAY CONTRACT', 'HC ', "H C", "H.C.", "H. C.",
+                    ] + map("".join,product(l, string.digits, string.digits)) + ['0','1','2','3','4','5','6','7','8','9',]
     addr = address.strip().upper() 
     for suffix in addr_headers:
         if addr.startswith(suffix):
