@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.9 (2013-02-28)
+==================
+ * a bug in normalize_address introduced in 0.3.8 was fixed
+
 0.3.8 (2013-02-28)
 ==================
  * is_person, remove_aka, normalize_address were improved

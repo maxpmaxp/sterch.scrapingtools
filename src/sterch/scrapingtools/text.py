@@ -10,7 +10,7 @@ __license__ = "ZPL"
 
 import csv
 import os.path
-import re
+import re, string
 import fullname as modfullname
 
 from itertools import product
@@ -218,6 +218,7 @@ def normalize_address(address):
         the letter P, (PO BOX, P.O. BOX, etc), RR, the word Rural (as in Rural Route), 
         HC, the word Highway (as in Highway Contract 77…), 
         or a letter followed immediate by at least two integers, i.e. (like this W7905 State Road 29, or N4116 Springbrook Rd) """
+    l = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", "P. O.", 
                     'RURAL ROUTE', 'RR ', "R R", "R.R.", "R. R.",
                     'HIGHWAY CONTRACT', 'HC ', "H C", "H.C.", "H. C.",
