@@ -227,10 +227,12 @@ def normalize_address(address):
     for suffix in addr_headers:
         if addr.startswith(suffix):
             return addr    
+    min_match = None
     for suffix in addr_headers:
         if suffix in addr:
-            return addr[addr.find(suffix):]    
-    return address
+            min_match = min(min_match, addr.find(suffix)) if min_match is not None else addr.find(suffix)
+    retval = address if min_match is None else addr[min_match:]
+    return retval
 
 def get_block(page, start, end):
     """ Returns a block as described by start and end markers.
