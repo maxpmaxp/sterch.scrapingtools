@@ -92,8 +92,9 @@ def is_john_doe(**case):
     fullname = case.get('fullname')
     if not fullname:
         fullname = " ".join(filter(None, [case[f] if case.get(f,'') else '' for f in ('lastname', 'firstname', 'middlename', 'suffix')]))
-    fullname = "".join([ c for c in fullname.upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])    
-    
+    fullname = "".join([ c for c in fullname.upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ "])    
+    fullname = fullname.strip()
+    if not fullname: return True
     _lastname = "".join([ c for c in case.get('lastname','').upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
     _firstname = "".join([ c for c in case.get('firstname','').upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
     pieces = filter(None, fullname.split())
