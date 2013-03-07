@@ -1,6 +1,17 @@
 Changelog
 *********
 
+0.3.11 (2013-03-07)
+==================
+ * remove_aka improved
+ * is_plaintiff, is_defendant improved
+ * extract_description improved
+ * parse_city_state_zip an issue with parsing data splitted by comma with no spaces fixed
+ * is_person improved
+ * extract_date improved
+ * parse_fullname works around $ character in fullname
+ * is_john_doe improved
+
 0.3.10 (2013-03-01)
 ==================
  * an old bug in normalize_address was fixed

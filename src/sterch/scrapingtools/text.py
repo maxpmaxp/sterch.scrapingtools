@@ -123,7 +123,7 @@ def parse_fullname(fullname, schema="lfms"):
     if "; " in job['middlename']:
         job['middlename'], job['suffix'] = job['middlename'].split("; ",1)
     for f in ('firstname', 'middlename', 'lastname', 'suffix'):
-        for c in (',','.',';'):
+        for c in (',','.',';','$'):
             job[f] = job[f].replace(c," ")
         while "  " in job[f]: job[f] = job[f].replace("  "," ")
     # I and V are suffixes only if there is a middlename
@@ -166,7 +166,9 @@ def parse_fulladdress(fulladdress):
 def remove_aka(fullname):
     """ Removes AKA from the fullname given """
     fu = fullname.upper()
-    for aka in ("AKA ", " AKA", "A.K.A.", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.'):
+    for aka in ("AKA ", " AKA", "A.K.A.", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.',
+                "DBA ", " DBA", "D.B.A.", "D/B/A", "(DOING BUSINESS AS)", "DOING BUSINESS AS", " D B A ", 'D. B. A.', 
+                'IN HER OFFICIAL CAPACITY', 'IN HIS OFFICIAL CAPACITY', 'IN HER CAPACITY', 'IN HIS CAPACITY'):
         if aka in fu:
             fu = fu.split(aka,1)[0]
     return fu.strip()
@@ -175,7 +177,7 @@ def is_person(fullname):
     """ Checks whether a name given is person's name """
     return not (any(map(lambda e:fullname.upper().strip().endswith(e), 
                             [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST', ' COURT',
-                             " ORG", " ORG.", " CTY", " TREAS", " TAX", " DEPT", " DEPT.", " B M V"])) or \
+                             " ORG", " ORG.", " CTY", " TREAS", " TAX", " DEPT", " DEPT.", " B M V", " CLUB", ])) or \
                any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
                                     ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
                                     'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
@@ -188,12 +190,14 @@ def is_person(fullname):
                                     "COMMISSION", "INDUSTRIAL", "HEIRS", "DIRECTOR", "ADMINISTRATOR", "HOUSING", "HOMESTEAD", "SURVIVING", 
                                     "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
-                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY",])) or \
+                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY",
+                                    "CASINO", "COMMISSION" , " CLUB ", ])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
-                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V "])))
+                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])))
 
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
+    city_state_zip = city_state_zip.replace(",", ", ").replace(".", ". ")
     info = dict(city="", state="", zip="")
     try:
         info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)

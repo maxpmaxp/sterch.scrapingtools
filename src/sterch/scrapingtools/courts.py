@@ -13,11 +13,11 @@ from text import is_person, smart_cmp, normalize
 
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
-    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PLTF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED')))
+    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PLTF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED', 'APPELLANT')))
     
 def is_defendant(descr):
     """ If a string description is a defendant description """
-    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('DEFENDANT', 'DEFT', 'RESPONDENT', 'RESPONDER', 'RESTRAINED')))
+    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('DEFENDANT', 'DEFT', 'RESPONDENT', 'RESPONDER', 'RESTRAINED', 'APPELLEE')))
 
 def is_attorney(descr):
     """ If a string description is a attorney description """
@@ -47,7 +47,7 @@ def extract_description(page, default=None):
               "APPEAL WORKERS COMPENSATION", "WORKERS COMPENSATION",
               "OTHER TORT PERSONAL INJURY (A)", "OTHER TORT PERSONAL INJURY (B)", "OTHER TORT PERSONAL INJURY (C)", "OTHER TORT PERSONAL INJURY (D)",
               "OTHER TORT PERSONAL INJURY", "TORT PERSONAL INJURY", "PERSONAL INJURY",
-              "BMV FORM 2255 ADM LIC SUSP (ALS)", "BMV FORM 2255 ADM LIC SUSP"):
+              "BMV FORM 2255 ADM LIC SUSP (ALS)", "BMV FORM 2255 ADM LIC SUSP", "SMALL CLAIM"):
         if _m in page:
             desc = _m
             break
@@ -60,10 +60,14 @@ def extract_date(text):
                    "\d{1,2}-\d{1,2}-\d\d\d\d",
                    "\d{1,2}/\w\w\w/\d\d\d\d",
                    "\d{1,2}-\w\w\w-\d\d\d\d",
+                   "\w\w\w \d{1,2} \d\d\d\d",
+                   "\d{1,2} \w\w\w \d\d\d\d",
                    "\d{1,2}/\d{1,2}/\d\d",
                    "\d{1,2}-\d{1,2}-\d\d",
                    "\d{1,2}/\w\w\w/\d\d",
                    "\d{1,2}-\w\w\w-\d\d",
+                   "\w\w\w \d{1,2} \d\d",
+                   "\d{1,2} \w\w\w \d\d",
                   )
     for fmt in all_formats:
         lst = re.findall(fmt, text)
@@ -88,12 +92,11 @@ def is_john_doe(**case):
     fullname = case.get('fullname')
     if not fullname:
         fullname = " ".join(filter(None, [case[f] if case.get(f,'') else '' for f in ('lastname', 'firstname', 'middlename', 'suffix')]))
-    fullname = fullname.upper()    
+    fullname = "".join([ c for c in fullname.upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])    
     
-    _lastname = case.get('lastname','').upper()
+    _lastname = "".join([ c for c in case.get('lastname','').upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
     _firstname = "".join([ c for c in case.get('firstname','').upper() if c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"])
-    
+    pieces = filter(None, fullname.split())
     return is_person(fullname) and \
-            (any(map(lambda s: s in fullname, ['UNKSP', 'UNK SP', 'UNK SPOUSE', 'DOE JOHN', 'DOE JANE', 'JOHN DOE', 'JANE DOE', 'UNKNOWN'])) \
-             or ((_lastname == "DOE" or _lastname == "DOES" or _lastname.startswith("DOE ") or _lastname.startswith("DOES ")) and _firstname in ('JOHN', 'JANE', ''))
-            )
+            (any(map(lambda s: s in fullname, ['UNKSP', 'UNK SP', 'UNK SPOUSE', 'DOE JOHN', 'DOE JANE', 'JOHN DOE', 'JANE DOE', 'UNKNOWN', ' DOES ', ' DOE '])) or
+             any(map(lambda s: s in pieces, ("DOE", "DOES", "UNKNOWN", "UNK", "SPOSE", "TENANT",))))
