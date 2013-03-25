@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.3.13 (2013-03-25)
+==================
+ * remove_aka improved with FKA
+
 0.3.12 (2013-03-07)
 ==================
  * is_john_doe improved
