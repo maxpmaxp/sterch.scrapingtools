@@ -70,7 +70,7 @@ def createOpener(cookies=None, headers=None, _proxies=None):
             pass
     return opener
 
-def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False):
+def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False, maxreadtries=MAXREADTRIES, delay=DELAY):
     """ url --- url to read
         data --- data to be POSTed. if dictionary --- in will be encoded.
         needURL --- if set to True readpage returns tuple (data, url) where url is real reading url after redirects.
@@ -86,7 +86,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
     opener = createOpener(cookies=c, headers=headers, _proxies = _proxies)
     realURL=''
     exc = ClientError("Download failed for unknown reason")
-    while not downloaded and ntries < MAXREADTRIES:
+    while not downloaded and ntries < maxreadtries:
         try: 
             if type(data) is dict:
                 topost = urllib.urlencode(data)
@@ -106,12 +106,12 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
             else:
                 print "ERROR: network error (%s)" % url, ex
             opener.close()
-            sleep(DELAY)
+            sleep(delay)
             ntries += 1
             opener = createOpener(cookies=c, headers=headers, _proxies = _proxies)
             
     if not downloaded : 
-        print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries,ex)
+        print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries, ex)
         raise ex
      
     if needURL:
@@ -153,7 +153,10 @@ class Client(object):
     """ Simple browser emulator implements following policy:
         every read uses same cookiejar, same proxy and same browser headers.
     """
-    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False,x_proxy_session=True):
+    delay = DELAY
+    maxreadtries = MAXREADTRIES
+    
+    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=True):
          
         if cookies is not None:
             self.cookies = cookies
@@ -186,7 +189,9 @@ class Client(object):
                         cookies = self.cookies,
                         headers = self.headers + extra_headers if extra_headers else self.headers,
                         _proxies = self.proxies,
-                        needURL = True)
+                        needURL = True,
+                        maxreadtries=self.maxreadtries,
+                        delay=self.delay)
         self.lastURL = realurl
         try:
             page = GzipFile(fileobj=StringIO(page)).read()

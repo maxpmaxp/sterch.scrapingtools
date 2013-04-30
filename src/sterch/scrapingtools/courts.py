@@ -10,6 +10,7 @@ __license__ = "ZPL"
 
 import re
 from text import is_person, smart_cmp, normalize
+from threading import Lock
 
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
@@ -101,3 +102,31 @@ def is_john_doe(**case):
     return is_person(fullname) and \
             (any(map(lambda s: s in fullname, ['UNKSP', 'UNK SP', 'UNK SPOUSE', 'DOE JOHN', 'DOE JANE', 'JOHN DOE', 'JANE DOE', 'UNKNOWN', ' DOES ', ' DOE '])) or
              any(map(lambda s: s in pieces, ("DOE", "DOES", "UNKNOWN", "UNK", "SPOSE", "TENANT",))))
+            
+class SequenceState(object):
+    """ Sequence pulling state """
+    
+    def __init__(self, lastnumber, limit):
+        self.lock = Lock()
+        self._lastnumber = lastnumber
+        self.missing = set()
+        self.limit = limit
+        
+    def get_lastnumber(self):
+        with self.lock:
+            return self._lastnumber
+        
+    def set_lastnumber(self, v):
+        with self.lock:
+            if v > self._lastnumber:
+                self._lastnumber = v
+                
+    lastnumber = property(get_lastnumber, set_lastnumber)
+    
+    def add_to_missing(self, v):
+        with self.lock:
+            self.missing.add(v)
+            
+    def is_finished(self):
+        with self.lock:
+            return set(xrange(self._lastnumber + 1, self._lastnumber + self.limit)).issubset(self.missing)

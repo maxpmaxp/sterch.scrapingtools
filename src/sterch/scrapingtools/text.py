@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012,2013
+# All right reserved, 2012, 2013
 #######################################################################
 
 """Text processing functions
@@ -18,6 +18,81 @@ from string import strip
 
 __MY__PATH__ = os.path.dirname(os.path.abspath(__file__))
 glEntities = dict([p for p in csv.reader(open(os.path.join(__MY__PATH__,"entities.csv"),"rU")) ]) 
+
+US_STATE_CODES = \
+{
+    'ALABAMA' : 'AL',
+    'ALASKA' : 'AK',
+    'ARIZONA' : 'AZ',
+    'ARKANSAS' : 'AR',
+    'CALIFORNIA' : 'CA',
+    'COLORADO' : 'CO',
+    'CONNECTICUT' : 'CT',
+    'DELAWARE' : 'DE',
+    'DISTRICT OF COLUMBIA' : 'DC',
+    'FLORIDA' : 'FL',
+    'GEORGIA' : 'GA',
+    'HAWAII' : 'HI',
+    'IDAHO' : 'ID',
+    'ILLINOIS' : 'IL',
+    'INDIANA' : 'IN',
+    'IOWA' : 'IA',
+    'KANSAS' : 'KS',
+    'KENTUCKY' : 'KY',
+    'LOUISIANA' : 'LA',
+    'MAINE' : 'ME',
+    'MARYLAND' : 'MD',
+    'MASSACHUSETTS' : 'MA',
+    'MICHIGAN' : 'MI',
+    'MINNESOTA' : 'MN',
+    'MISSISSIPPI' : 'MS',
+    'MISSOURI' : 'MO',
+    'MONTANA' : 'MT',
+    'NEBRASKA' : 'NE',
+    'NEVADA' : 'NV',
+    'NEW HAMPSHIRE' : 'NH',
+    'NEW JERSEY' : 'NJ',
+    'NEW MEXICO' : 'NM',
+    'NEW YORK' : 'NY',
+    'NORTH CAROLINA' : 'NC',
+    'NORTH DAKOTA' : 'ND',
+    'OHIO' : 'OH',
+    'OKLAHOMA' : 'OK',
+    'OREGON' : 'OR',
+    'PENNSYLVANIA' : 'PA',
+    'RHODE ISLAND' : 'RI',
+    'SOUTH CAROLINA' : 'SC',
+    'SOUTH DAKOTA' : 'SD',
+    'TENNESSEE' : 'TN',
+    'TEXAS' : 'TX',
+    'UTAH' : 'UT',
+    'VERMONT' : 'VT',
+    'VIRGINIA' : 'VA',
+    'WASHINGTON' : 'WA',
+    'WEST VIRGINIA' : 'WV',
+    'WISCONSIN' : 'WI',
+    'WYOMING' : 'WY',
+}
+
+CA_PROVINCE_CODES = {
+    'ALBERTA' : 'AB',            
+    'BRITISH COLUMBIA' : 'BC',            
+    'MANITOBA' : 'MB',            
+    'NEW BRUNSWICK' : 'NB',
+    'BRUNSWICK' : 'NB',            
+    'NEWFOUNDLAND AND LABRADOR' : 'NL',
+    'NEWFOUNDLAND' : 'NL',
+    'LABRADOR' : 'NL',            
+    'NORTHWEST TERRITORIES' : 'NT',            
+    'NOVA SCOTIA' : 'NS',            
+    'NUNAVUT' : 'NU',            
+    'ONTARIO': 'ON',            
+    'PRINCE EDWARD ISLAND' : 'PE',
+    'PRINCE EDWARD' : 'PE',            
+    'QUEBEC' : 'QC',            
+    'SASKATCHEWAN' : 'SK',            
+    'YUKON' : 'YT',                     
+}
 
 def is_fullname_suffix(s):
     """ Returns Trus if S is a full name suffix """
@@ -47,6 +122,7 @@ def replace_html_entities(text):
     return text
 
 def normalize(s):
+    if not s: return ""
     ss = s
     _javascript = re.findall("(<script.*?>.*?</script>)", ss, re.MULTILINE|re.DOTALL)
     for script in _javascript:
@@ -133,6 +209,7 @@ def parse_fullname(fullname, schema="lfms"):
     # strip spaces
     for f in ("firstname", "lastname", "middlename", "suffix"):
         job[f] = job[f].strip()
+        if job[f].endswith(","): job[f] = job[f][:-1]
     return job
 
 def parse_fulladdress(fulladdress):
@@ -192,28 +269,40 @@ def is_person(fullname):
                                     "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
                                     "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY",
-                                    "CASINO", "COMMISSION" , " CLUB ", ])) or \
+                                    "CASINO", "COMMISSION" , " CLUB ", ] + US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])))
 
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
-    city_state_zip = city_state_zip.replace(",", ", ").replace(".", ". ")
+    city_state_zip = city_state_zip.replace(",", ", ").replace(".", ". ").strip()
     info = dict(city="", state="", zip="")
     try:
         info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)
     except:
+        all_states = set(US_STATE_CODES.keys() + US_STATE_CODES.values() + CA_PROVINCE_CODES.keys() + CA_PROVINCE_CODES.values())
         try:
-            p1, p2 = city_state_zip.rsplit(" ", 1)
+            p1, p2 = map(strip, city_state_zip.rsplit(" ", 1))
             # check if p1 is US zip :
             if all(map(lambda x:x in "0123456789-", p2)):
-                info['state'], info['zip'] = p1, p2
+                info["zip"] = p2
+                if p1.upper() in all_states:
+                    info['state'] = p1
+                else:
+                    info['city'] = p1
             else:
-                info['city'], info['state'] = p1, p2
+                if p2.upper() in all_states:
+                    info['city'], info['state'] = p1, p2
+                else:
+                    info['city'] = "%s %s" (p1, p2)     
         except:
-            info['city'] = city_state_zip
+            if city_state_zip.upper() in all_states:
+                info['state'] = city_state_zip
+            else:
+                info['city'] = city_state_zip
+                
     for f in ('city', 'state', 'zip'):
-        info[f] = info[f].replace(u'\xa0','')
+        info[f] = info[f].replace(u'\xa0','').strip()
         if info[f].endswith(",") : info[f] = info[f][:-1]
     info['state'] = info['state'].upper()
     return info

@@ -1,6 +1,17 @@
 Changelog
 *********
 
+0.4 (2013-04-30)
+================
+
+ * SequenceState class added
+ * IConfig base interface added
+ * US states & CA provinces and its codes dicts added
+ * minor 'normalize' improvement
+ * minor 'parse_fullname' improvement
+ * minor 'parse_city_state_zip' improvement
+ * MAXREADTRIES and DELAY are `readpage` optional variables and Client class attributes
+
 0.3.13 (2013-03-25)
 ==================
  * remove_aka improved with FKA
