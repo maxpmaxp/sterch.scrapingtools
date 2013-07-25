@@ -208,8 +208,8 @@ def parse_fullname(fullname, schema="lfms"):
         job["suffix"] = ""
     # strip spaces
     for f in ("firstname", "lastname", "middlename", "suffix"):
-        job[f] = job[f].strip()
-        if job[f].endswith(","): job[f] = job[f][:-1]
+        while job[f] and job[f][-1] in (',',';','.',' '):
+            job[f] = job[f][:-1]
     return job
 
 def parse_fulladdress(fulladdress):
@@ -236,7 +236,7 @@ def parse_fulladdress(fulladdress):
     for k, v in info.items():
         info[k] = v.strip()
     for f in ('address', 'state', 'city', 'zip'):
-        if info[f] and info[f][-1] in (',',';','.'):
+        while info[f] and info[f][-1] in (',',';','.',' '):
             info[f] = info[f][:-1]
     return info
 
@@ -268,8 +268,8 @@ def is_person(fullname):
                                     "COMMISSION", "INDUSTRIAL", "HEIRS", "DIRECTOR", "ADMINISTRATOR", "HOUSING", "HOMESTEAD", "SURVIVING", 
                                     "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
-                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY",
-                                    "CASINO", "COMMISSION" , " CLUB ", ] + US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())) or \
+                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS",
+                                    "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D." ] + US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])))
 
@@ -362,6 +362,7 @@ def walk_table(page, row_marker="</tr>", cell_marker="</td>", min_cols_number=No
         if min_cols_number is not None - filters all rows with a number of columns less then the one.
         Normally row_marker and cell_marker mark the end on the block except when use_start_markers is set to True
     """
+    if not page: return
     row_slices = page.split(row_marker)[:-1] if not use_start_markers else page.split(row_marker)[:-1]
     for row in row_slices:
         cols = row.split(cell_marker)[:-1] if not use_start_markers else row.split(cell_marker)[:-1]
@@ -375,3 +376,25 @@ def smart_cmp(s1, s2):
     _s1, _s2 = map(lambda s: sorted(filter(None, s.split())), (_s1, _s2))
     _s1, _s2 = map(lambda s: map(strip, s), (_s1, _s2))
     return _s1 == _s2
+
+def smart_fullname_cmp(fullname_variant, **person):
+    """ Compares fullname against person's lastname, firstname, middlename and suffix """
+    fullname_factories = ( lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname', 'middlename', 'suffix'))),
+                       lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname', 'middlename'))),
+                       lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname'))) + (" %s" % d['middlename'][0] if d.get('middlename') else ''),
+                       lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname'))),
+                      )
+    return any(map(lambda fn_factory: smart_cmp(fn_factory(**person), fullname_variant), fullname_factories))
+
+def smart_match_fullname(text, **person):
+    """ Returns True if person's name is in the text provided """
+    text = text.upper()
+    for _ in '.,()"\':0123456789!@#$^%&*_~`</>\\': text = text.replace(_," ")
+    tokens = filter(None, text.split()) 
+    for j in xrange(0, len(tokens) - 2):
+        pieces = tokens[j:]
+        for i in (2,3):
+            _name = " ".join(pieces[:i])
+            if smart_fullname_cmp(_name, **person):
+                return True
+    return False

@@ -1,6 +1,15 @@
 Changelog
 *********
 
+0.4.1 (2013-07-25)
+==================
+ * is_person improved
+ * is_defendant improved
+ * is_plaintiff improved
+ * walk_table now works around empty/None pages
+ * parse_fullname, parse_fulladdress - strip trailing spaces, commas etc.
+ * smart_fullname_cmp and smart_match_fullname added
+ 
 0.4 (2013-04-30)
 ================
 

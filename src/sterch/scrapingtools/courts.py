@@ -14,11 +14,11 @@ from threading import Lock
 
 def is_plaintiff(descr):
     """ If a string description is a plaintiff description """
-    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PLTF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED', 'APPELLANT')))
+    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('PLAINTIFF', 'PLTF', 'PETITIONER', 'CLAIMANT', 'COMPLAINANT', 'PROTECTED', 'APPELLANT', 'LIENEE')))
     
 def is_defendant(descr):
     """ If a string description is a defendant description """
-    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('DEFENDANT', 'DEFT', 'RESPONDENT', 'RESPONDER', 'RESTRAINED', 'APPELLEE')))
+    return not is_attorney(descr) and any(map(lambda s: s in descr.upper(), ('DEFENDANT', 'DEFT', 'RESPONDENT', 'RESPONDER', 'RESTRAINED', 'APPELLEE', 'LIENOR')))
 
 def is_attorney(descr):
     """ If a string description is a attorney description """
