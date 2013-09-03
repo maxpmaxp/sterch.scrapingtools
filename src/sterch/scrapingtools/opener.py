@@ -14,11 +14,11 @@ from copy import copy
 from cStringIO import StringIO
 from gzip import GzipFile
 from handlers import BindableHTTPHandlerFactory
-from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory
+from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory, IClient
 from random import choice, randint
 from time import sleep
 from zope.component import getUtility, ComponentLookupError
-from zope.interface import directlyProvides
+from zope.interface import directlyProvides, implements
 
 import mimetypes
 import os.path
@@ -153,6 +153,7 @@ class Client(object):
     """ Simple browser emulator implements following policy:
         every read uses same cookiejar, same proxy and same browser headers.
     """
+    implements(IClient)
     delay = DELAY
     maxreadtries = MAXREADTRIES
     
@@ -303,4 +304,5 @@ def clone_client(c):
     clone.proxies = copy(c.proxies)
     clone.headers = copy(c.headers)
     clone.lastURL = c.lastURL
+    directlyProvides(clone, IClient)
     return clone

@@ -96,7 +96,7 @@ CA_PROVINCE_CODES = {
 
 def is_fullname_suffix(s):
     """ Returns Trus if S is a full name suffix """
-    return s.upper().strip() in ['JUNIOR', 'SENIOR', 'JR', 'JR.', 'SR', 'SR.', "I", "II", "III", "IV", "V", "VI", "1ST", "2ND", "3RD", "4TH", "5TH", "6TH"]
+    return s.upper().strip() in ['JUNIOR', 'SENIOR', 'JR', 'JR.', 'SR', 'SR.', 'DR', 'DR.', 'PHD', "PHD.", "SIR", "ESQ", "ESQ.", "I", "II", "III", "IV", "V", "VI", "1ST", "2ND", "3RD", "4TH", "5TH", "6TH"]
 
 def striptags(text):
     """ strips tags from the text"""
@@ -166,19 +166,22 @@ def parse_fullname(fullname, schema="lfms"):
     allnames = filter(None, allnames)
     job["suffix"] = ''
     if allnames:
-        suffix = ""
+        title = suffix = ""
+        # assume suffix comes first (f.e. Dr.)
+        if is_fullname_suffix(allnames[0]):
+            job["suffix"], allnames = allnames[0], allnames[1:]
         if schema.endswith("s"):
             # suffix comes last
             suffix = allnames[-1].upper().strip()
             if suffix and is_fullname_suffix(suffix):
-                job["suffix"] = suffix
+                job["suffix"] = " ".join((job["suffix"], suffix)).strip()
                 allnames = allnames[:-1]
         if schema[1] == "s":   
             # suffix comes 2nd
             if len(allnames) > 1:
                 suffix = allnames[1]
                 if suffix and is_fullname_suffix(suffix):
-                    job["suffix"] = suffix
+                    job["suffix"] = " ".join((job["suffix"], suffix)).strip()
                     allnames = [allnames[0],] + allnames[2:]
             
     if len(allnames) == 1:
@@ -194,7 +197,10 @@ def parse_fullname(fullname, schema="lfms"):
             parser = modfullname.parse_flms
         else:
             raise ValueError("Unknown fullname schema %s" % schema)
-        job.update(parser(allnames))
+        parsed = parser(allnames)
+        suffix = parsed.pop("suffix", "")
+        job.update(parsed,
+                   suffix=" ".join((job["suffix"], suffix)).strip())
     # postprocess middlename
     if "; " in job['middlename']:
         job['middlename'], job['suffix'] = job['middlename'].split("; ",1)
@@ -210,6 +216,18 @@ def parse_fullname(fullname, schema="lfms"):
     for f in ("firstname", "lastname", "middlename", "suffix"):
         while job[f] and job[f][-1] in (',',';','.',' '):
             job[f] = job[f][:-1]
+    # work around mixed middlename & firstname when len(firstname)=1
+    if len(job["middlename"]) > 1 and len(job["firstname"]) == 1:
+        job["firstname"], job["middlename"] = job["middlename"], job["firstname"]
+    # Work around suffix in the lastname
+    if ' ' in job["lastname"]:
+        pieces = job["lastname"].split(" ")
+        for sfx, ln in ((pieces[0], " ".join(pieces[1:])),  
+                        (pieces[-1], " ".join(pieces[:-1]))):
+            if is_fullname_suffix(sfx):
+                job["lastname"] = ln
+                job["suffix"] = " ".join((job["suffix"], sfx)).strip()
+                break
     return job
 
 def parse_fulladdress(fulladdress):
@@ -268,7 +286,7 @@ def is_person(fullname):
                                     "COMMISSION", "INDUSTRIAL", "HEIRS", "DIRECTOR", "ADMINISTRATOR", "HOUSING", "HOMESTEAD", "SURVIVING", 
                                     "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
-                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS",
+                                    "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS", "COURTROOM",
                                     "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D." ] + US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])))
@@ -307,16 +325,16 @@ def parse_city_state_zip(city_state_zip):
     info['state'] = info['state'].upper()
     return info
 
+addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", "P. O.", 
+                'RURAL ROUTE', 'RR ', "R R", "R.R.", "R. R.",
+                'HIGHWAY CONTRACT', 'HC ', "H C", "H.C.", "H. C.",
+                ] + map("".join,product('ABCDEFGHIJKLMNOPQRSTUVWXYZ', string.digits, string.digits)) + ['0','1','2','3','4','5','6','7','8','9',]
+
 def normalize_address(address):
     """ An address must start with an integer, 
         the letter P, (PO BOX, P.O. BOX, etc), RR, the word Rural (as in Rural Route), 
         HC, the word Highway (as in Highway Contract 77…), 
         or a letter followed immediate by at least two integers, i.e. (like this W7905 State Road 29, or N4116 Springbrook Rd) """
-    l = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", "P. O.", 
-                    'RURAL ROUTE', 'RR ', "R R", "R.R.", "R. R.",
-                    'HIGHWAY CONTRACT', 'HC ', "H C", "H.C.", "H. C.",
-                    ] + map("".join,product(l, string.digits, string.digits)) + ['0','1','2','3','4','5','6','7','8','9',]
     addr = address.strip().upper() 
     for suffix in addr_headers:
         if addr.startswith(suffix):
@@ -327,6 +345,12 @@ def normalize_address(address):
             min_match = min(min_match, addr.find(suffix)) if min_match is not None else addr.find(suffix)
     retval = address if min_match is None else addr[min_match:]
     return retval
+
+def is_normal_address(address):
+    """ Returns True is address is a normal one, See normalize_address for more """
+    if not address: return False
+    address = address.upper()
+    return any(map(lambda _: address.startswith(_), addr_headers))
 
 def get_block(page, start, end):
     """ Returns a block as described by start and end markers.

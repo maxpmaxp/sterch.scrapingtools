@@ -1,6 +1,14 @@
 Changelog
 *********
-
+0.5.0 (2013-09-03)
+==================
+ * is_person improved
+ * parse_fullname - work around mixed middlename & firstname when len(firstname)=1
+ * DR, SIR, PHD, ESQ - new fullname suffixes, also it may come in the beginning
+ * IClient, IClientFactory interfaces provided
+ * Client class implements IClient interface and is IClientFactory factory
+ * is_normal_address function added
+ 
 0.4.1 (2013-07-25)
 ==================
  * is_person improved

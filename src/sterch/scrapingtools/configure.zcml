@@ -16,5 +16,15 @@
 	<utility
     	provides=".interfaces.IIPFactory"
     	component=".opener.getip" />
-			
+
+	<utility
+    	provides=".interfaces.IClientFactory"
+    	component=".opener.Client" />
+	
+	<utility
+    	provides=".interfaces.IClientFactory"
+    	component=".opener.Client" 
+    	name="sterch.scrapingtools.Client" />
+	
+    			
 </configure>
