@@ -1,5 +1,10 @@
 Changelog
 *********
+0.5.1 (2013-10-09)
+==================
+ * debug flag was added for Client class. This allows to track HTTP requests & responses.
+ * is_person improved
+
 0.5.0 (2013-09-03)
 ==================
  * is_person improved

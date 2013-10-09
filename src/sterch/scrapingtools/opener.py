@@ -42,8 +42,8 @@ def getip():
 
 directlyProvides(getip, IIPFactory)
     
-def createOpener(cookies=None, headers=None, _proxies=None):
-    handlers = []
+def createOpener(cookies=None, headers=None, _proxies=None, debug=False):
+    handlers = [] if not debug else [urllib2.HTTPHandler(debuglevel=1),]
     if _proxies:
         proxy_support = urllib2.ProxyHandler(_proxies)
         handlers.append(proxy_support)
@@ -70,7 +70,7 @@ def createOpener(cookies=None, headers=None, _proxies=None):
             pass
     return opener
 
-def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False, maxreadtries=MAXREADTRIES, delay=DELAY):
+def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False, maxreadtries=MAXREADTRIES, delay=DELAY, debug=False):
     """ url --- url to read
         data --- data to be POSTed. if dictionary --- in will be encoded.
         needURL --- if set to True readpage returns tuple (data, url) where url is real reading url after redirects.
@@ -83,7 +83,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
         c = cookies
     else:
         c = cjar
-    opener = createOpener(cookies=c, headers=headers, _proxies = _proxies)
+    opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug)
     realURL=''
     exc = ClientError("Download failed for unknown reason")
     while not downloaded and ntries < maxreadtries:
@@ -108,7 +108,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
             opener.close()
             sleep(delay)
             ntries += 1
-            opener = createOpener(cookies=c, headers=headers, _proxies = _proxies)
+            opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug)
             
     if not downloaded : 
         print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries, ex)
@@ -157,8 +157,8 @@ class Client(object):
     delay = DELAY
     maxreadtries = MAXREADTRIES
     
-    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=True):
-         
+    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=True, debug=False):
+        self.debug = debug 
         if cookies is not None:
             self.cookies = cookies
         else:
@@ -192,7 +192,8 @@ class Client(object):
                         _proxies = self.proxies,
                         needURL = True,
                         maxreadtries=self.maxreadtries,
-                        delay=self.delay)
+                        delay=self.delay, 
+                        debug=self.debug)
         self.lastURL = realurl
         try:
             page = GzipFile(fileobj=StringIO(page)).read()
@@ -204,7 +205,8 @@ class Client(object):
         """ returns real url after redirects """
         opener = createOpener(cookies = self.cookies,
                     headers = self.headers + extra_headers if extra_headers else self.headers,
-                    _proxies = self.proxies)
+                    _proxies = self.proxies,
+                    debug = self.debug)
         
         f = opener.open(url)
         realURL = f.geturl()
@@ -229,7 +231,8 @@ class Client(object):
             c = cjar
         opener = createOpener(cookies=c, 
                               headers=self.headers + extra_headers if extra_headers else self.headers, 
-                              _proxies = self.proxies)
+                              _proxies = self.proxies,
+                              debug = self.debug)
         headers = {'Content-Type': content_type,
                    'Content-Length': str(len(body))}
         request = urllib2.Request(url, body, headers)
@@ -253,7 +256,8 @@ class Client(object):
                 ntries += 1
                 opener = createOpener(cookies=c, 
                                       headers=self.headers + extra_headers if extra_headers else self.headers, 
-                                      _proxies = self.proxies)
+                                      _proxies=self.proxies,
+                                      debug=self.debug)
         
         if not downloaded : 
             print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries,ex)

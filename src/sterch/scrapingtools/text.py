@@ -287,9 +287,11 @@ def is_person(fullname):
                                     "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
                                     "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS", "COURTROOM",
-                                    "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D." ] + US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())) or \
+                                    "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D." ])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
-                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])))
+                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])) or \
+                any(map(lambda e:fullname.upper().strip() == e, 
+                            US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())))
 
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
