@@ -1,5 +1,10 @@
 Changelog
 *********
+0.5.2 (2013-11-26)
+==================
+ * smart_fullname_cmp improved. It understands shortened forms of first and middle names
+ * smart_match_fullname improved. It finds matches if a firstname or a middlename is missing.
+
 0.5.1 (2013-10-09)
 ==================
  * debug flag was added for Client class. This allows to track HTTP requests & responses.

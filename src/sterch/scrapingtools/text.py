@@ -409,6 +409,10 @@ def smart_fullname_cmp(fullname_variant, **person):
                        lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname', 'middlename'))),
                        lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname'))) + (" %s" % d['middlename'][0] if d.get('middlename') else ''),
                        lambda **d: " ".join(map(lambda _f: d.get(_f) or '', ('lastname', 'firstname'))),
+                       lambda **d: " ".join((d.get('lastname') or '', " %s" % d['firstname'][0] if d.get('firstname') else '',
+                                                                     " %s" % d['middlename'][0] if d.get('middlename') else '')),
+                       lambda **d: " ".join((d.get('lastname') or '', " %s" % d['firstname'][0] if d.get('firstname') else '')),
+                       lambda **d: " ".join((d.get('lastname') or '', " %s" % d['middlename'][0] if d.get('middlename') else '')),
                       )
     return any(map(lambda fn_factory: smart_cmp(fn_factory(**person), fullname_variant), fullname_factories))
 
@@ -416,11 +420,13 @@ def smart_match_fullname(text, **person):
     """ Returns True if person's name is in the text provided """
     text = text.upper()
     for _ in '.,()"\':0123456789!@#$^%&*_~`</>\\': text = text.replace(_," ")
-    tokens = filter(None, text.split()) 
-    for j in xrange(0, len(tokens) - 2):
-        pieces = tokens[j:]
-        for i in (2,3):
-            _name = " ".join(pieces[:i])
-            if smart_fullname_cmp(_name, **person):
-                return True
+    all_tokens = filter(None, text.split()) 
+    tokens_variants = (all_tokens, filter(lambda _: len(_) > 1, all_tokens))
+    for tokens in tokens_variants:
+        for j in xrange(0, len(tokens) - 2):
+            pieces = tokens[j:]
+            possible_names = [ " ".join(pieces[:_]) for _ in (2,3)] + [" ".join(pieces[-2:]),] 
+            for _name in possible_names:
+                if smart_fullname_cmp(_name, **person):
+                    return True
     return False
