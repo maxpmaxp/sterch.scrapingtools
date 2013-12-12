@@ -1,5 +1,10 @@
 Changelog
 *********
+0.5.3 (2013-12-12)
+==================
+ * smart_fullname_cmp improved. 
+ * smart_match_fullname bugs fixed.
+
 0.5.2 (2013-11-26)
 ==================
  * smart_fullname_cmp improved. It understands shortened forms of first and middle names
