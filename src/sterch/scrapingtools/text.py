@@ -295,7 +295,7 @@ def is_person(fullname):
 
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
-    city_state_zip = city_state_zip.replace(",", ", ").replace(".", ". ").strip()
+    city_state_zip = normalize(city_state_zip.replace(",", ", ").replace(".", ". ").strip())
     info = dict(city="", state="", zip="")
     try:
         info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)
@@ -325,6 +325,11 @@ def parse_city_state_zip(city_state_zip):
         info[f] = info[f].replace(u'\xa0','').strip()
         if info[f].endswith(",") : info[f] = info[f][:-1]
     info['state'] = info['state'].upper()
+    if info["zip"] and info["zip"].upper() in US_STATE_CODES.values():
+        # state is in zip field by mistake
+        info["city"] = ("%(city)s %(state)s" % info).strip()
+        info["state"] = info["zip"]
+        info["zip"] = ""
     return info
 
 addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", "P. O.", 
