@@ -1,18 +1,16 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012
+# All right reserved, 2012-2014
 #######################################################################
 
 """Client classes for the Zope 3 based
 """
-__author__  = "Polscha Maxim (maxp@sterch.net) Copy-pasted from http://code.activestate.com/recipes/456195/"
+__author__  = """Polscha Maxim (maxp@sterch.net) 
+                 Partially copy-pasted from http://code.activestate.com/recipes/456195/
+                 and http://bugs.python.org/issue11220 """
 __license__ = "ZPL" 
 
-import httplib
-import socket
-import sys
-import urllib
-import urllib2
+import httplib, ssl, urllib2, socket, sys
 
 class ProxyHTTPConnection(httplib.HTTPConnection):
     _ports = {'http' : 80, 'https' : 443}
@@ -119,4 +117,21 @@ def  BindableHTTPHandlerFactory(source_ip):
         def http_open(self, req):
             return self.do_open(BindableHTTPConnectionFactory(source_ip), req)
     return BindableHTTPHandler
-    
+
+class HTTPSConnectionV3(httplib.HTTPSConnection):
+    def __init__(self, *args, **kwargs):
+        httplib.HTTPSConnection.__init__(self, *args, **kwargs)
+        
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
+        try:
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv3)
+        except ssl.SSLError, e:
+            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file, ssl_version=ssl.PROTOCOL_SSLv23)
+            
+class HTTPSHandlerV3(urllib2.HTTPSHandler):
+    def https_open(self, req):
+        return self.do_open(HTTPSConnectionV3, req)

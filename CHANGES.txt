@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.6 (2014-02-01)
+==================
+ * Custom SSLv3 handler added to Client's opener
+ * It's possible to pass custom handlers to Client
+
 0.5.4 (2014-01-17)
 ==================
  * parse_city_state_zip improvements 

@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012, 2013
+# All right reserved, 2012, 2013, 2014
 #######################################################################
 
 """ Page downloading tools
@@ -42,8 +42,9 @@ def getip():
 
 directlyProvides(getip, IIPFactory)
     
-def createOpener(cookies=None, headers=None, _proxies=None, debug=False):
+def createOpener(cookies=None, headers=None, _proxies=None, debug=False, custom_handlers=None):
     handlers = [] if not debug else [urllib2.HTTPHandler(debuglevel=1),]
+    if custom_handlers: handlers.extend(custom_handlers)
     if _proxies:
         proxy_support = urllib2.ProxyHandler(_proxies)
         handlers.append(proxy_support)
@@ -70,7 +71,7 @@ def createOpener(cookies=None, headers=None, _proxies=None, debug=False):
             pass
     return opener
 
-def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False, maxreadtries=MAXREADTRIES, delay=DELAY, debug=False):
+def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False, maxreadtries=MAXREADTRIES, delay=DELAY, debug=False, custom_handlers=None):
     """ url --- url to read
         data --- data to be POSTed. if dictionary --- in will be encoded.
         needURL --- if set to True readpage returns tuple (data, url) where url is real reading url after redirects.
@@ -83,7 +84,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
         c = cookies
     else:
         c = cjar
-    opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug)
+    opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug, custom_handlers=custom_handlers)
     realURL=''
     exc = ClientError("Download failed for unknown reason")
     while not downloaded and ntries < maxreadtries:
@@ -157,8 +158,9 @@ class Client(object):
     delay = DELAY
     maxreadtries = MAXREADTRIES
     
-    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=True, debug=False):
+    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=True, debug=False, custom_handlers=None):
         self.debug = debug 
+        self.custom_handlers = custom_handlers
         if cookies is not None:
             self.cookies = cookies
         else:
@@ -193,7 +195,8 @@ class Client(object):
                         needURL = True,
                         maxreadtries=self.maxreadtries,
                         delay=self.delay, 
-                        debug=self.debug)
+                        debug=self.debug,
+                        custom_handlers=self.custom_handlers)
         self.lastURL = realurl
         try:
             page = GzipFile(fileobj=StringIO(page)).read()
