@@ -158,11 +158,8 @@ def parse_fullname(fullname, schema="lfms"):
     if not is_person(fullname):
         job["lastname"] = fullname
         return job
-    if ", " in fullname:
-        _allnames = fullname.split(", ",1)
-        allnames = [_allnames[0],] + _allnames[1].replace(","," ").split()
-    else:
-        allnames = fullname.split()
+    fullname = fullname.replace(","," ")
+    allnames = fullname.split()
     allnames = filter(None, allnames)
     job["suffix"] = ''
     if allnames:
@@ -296,6 +293,10 @@ def is_person(fullname):
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
     city_state_zip = normalize(city_state_zip.replace(",", ", ").replace(".", ". ").strip())
+    if city_state_zip:
+        # normalize commas
+        _m = " ,"
+        while _m in city_state_zip: city_state_zip = city_state_zip.replace(_m, ",")
     info = dict(city="", state="", zip="")
     try:
         info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)
@@ -384,7 +385,8 @@ def parse_ff_mapping(page, ff_mapping, end_marker):
     """ Parses fields mapping """
     info = dict()
     for k,v in ff_mapping.iteritems():
-        info[k] = normalize(page.split(v,1)[1].split(end_marker,1)[0]) if v in page else ''
+        tail = get_tail(page, v)
+        info[k] = normalize(head(tail, end_marker)) if tail and end_marker in tail else None
     return info
 
 def walk_table(page, row_marker="</tr>", cell_marker="</td>", min_cols_number=None, do_normalize=False, use_start_markers=False):

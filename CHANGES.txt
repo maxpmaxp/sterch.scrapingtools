@@ -1,6 +1,12 @@
 Changelog
 *********
-
+0.6.1 (2014-06-25)
+==================
+ * parse_ff_mapping issue fixed
+ * parse_city_state_zip commas normalization added
+ * decaptcher_solve - service URL can be customized to use gates like GSA
+ * parse_fullname improved
+ 
 0.6 (2014-02-01)
 ==================
  * Custom SSLv3 handler added to Client's opener

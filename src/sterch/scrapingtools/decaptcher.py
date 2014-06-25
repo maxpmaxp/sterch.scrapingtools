@@ -13,13 +13,13 @@ from opener import Client
 class DecaptcherException(Exception):
     """ Captcha was not solved """
 
-def decaptcher_solve(username, password, captcha, filename=None, client=None, pict_type='0'):
+def decaptcher_solve(username, password, captcha, filename=None, client=None, pict_type='0', service_url="http://poster.de-captcher.com/"):
     """ capthca --- value of capthca to solve """
     if not client:
         c = Client(noproxy=True)
     else: 
         c = client
-    url = "http://poster.de-captcher.com/"
+    url = service_url
     if not filename:
         fname = "captcha"
     else:
