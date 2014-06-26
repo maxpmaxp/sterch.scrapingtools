@@ -386,7 +386,7 @@ def parse_ff_mapping(page, ff_mapping, end_marker):
     info = dict()
     for k,v in ff_mapping.iteritems():
         tail = get_tail(page, v)
-        info[k] = normalize(head(tail, end_marker)) if tail and end_marker in tail else None
+        info[k] = normalize(get_head(tail, end_marker)) if tail and end_marker in tail else None
     return info
 
 def walk_table(page, row_marker="</tr>", cell_marker="</td>", min_cols_number=None, do_normalize=False, use_start_markers=False):

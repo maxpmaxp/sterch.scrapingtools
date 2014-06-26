@@ -1,5 +1,9 @@
 Changelog
 *********
+0.6.2 (2014-06-26)
+==================
+ * wrong function name fixed
+ 
 0.6.1 (2014-06-25)
 ==================
  * parse_ff_mapping issue fixed
