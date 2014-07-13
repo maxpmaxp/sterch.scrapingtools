@@ -106,8 +106,8 @@ class BindableHTTPConnection(httplib.HTTPConnection):
         self.sock.connect((self.host,self.port))
 
 def BindableHTTPConnectionFactory(source_ip=None):
-    def _get(host, port=None, strict=None):
-        bhc=BindableHTTPConnection(host, port=port, strict=strict)
+    def _get(host, port=None, strict=None, timeout=None):
+        bhc=BindableHTTPConnection(host, port=port, strict=strict, timeout=timeout)
         bhc.source_ip=source_ip
         return bhc
     return _get

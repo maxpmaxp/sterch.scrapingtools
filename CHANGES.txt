@@ -1,5 +1,9 @@
 Changelog
 *********
+0.6.3 (2014-07-13)
+==================
+ * missing optional argument added
+
 0.6.2 (2014-06-26)
 ==================
  * wrong function name fixed
