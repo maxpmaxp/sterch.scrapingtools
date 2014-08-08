@@ -7,7 +7,7 @@ def read(*rnames):
 
 setup(
     name='sterch.scrapingtools',
-    version='0.6.3',
+    version='0.6.4',
     url='http://sterch.net',
     license='ZPL',
     description='Library for building scrapers',
