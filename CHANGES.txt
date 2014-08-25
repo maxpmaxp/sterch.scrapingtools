@@ -1,5 +1,14 @@
 Changelog
 *********
+
+0.6.5 (2014-07-13)
+==================
+ * parse_and_normalize_streetaddress introduced
+
+0.6.4 (2014-07-13)
+==================
+ * decaptcher_solve improvements & minor bugfix
+
 0.6.3 (2014-07-13)
 ==================
  * missing optional argument added
