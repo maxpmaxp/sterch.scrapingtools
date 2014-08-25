@@ -10,7 +10,7 @@ from output import start_chunked_stdout, stop_chunked_stdout
 from synclist import SyncList, DuplicateValueError
 from text import replace_html_entities, striptags, normalize, tofilename, parse_fullname, parse_fulladdress
 from text import remove_aka, is_person, parse_city_state_zip, normalize_address, is_normal_address, is_fullname_suffix
-from text import smart_cmp, smart_fullname_cmp, smart_match_fullname
+from text import smart_cmp, smart_fullname_cmp, smart_match_fullname, parse_and_normalize_streetaddress
 from text import get_head, get_block, get_tail, walk_table, parse_ff_mapping, US_STATE_CODES, CA_PROVINCE_CODES
 from writer import CSVWriter, SimpleCSVWriter
 from worker import Worker, workers_group_factory, filter_dead_workers

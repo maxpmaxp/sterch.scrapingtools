@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012, 2013
+# All right reserved, 2012, 2013, 2014
 #######################################################################
 
 """Text processing functions
@@ -272,7 +272,7 @@ def is_person(fullname):
                             [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST', ' COURT',
                              " ORG", " ORG.", " CTY", " TREAS", " TAX", " DEPT", " DEPT.", " B M V", " CLUB", ])) or \
                any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
-                                    ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
+                                    ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'PLC', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
                                     'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
                                     "COMMONWEALTH", "CONDOMINIUM", "VILLAGE", "SHOP", "APARTMENTS", "&", "DBA", " AND ", "BUREAU", "TWP", "MARKET",
                                     "STUDIO", "ASSOC", ' TRUST ', 'NETWORK', 'LIMITED', 'DEPARTMENT', 'UNIT', 'CREDIT', 'TENANT', 'UNKNOWN', 'N/A', 'PRISON',
@@ -338,22 +338,81 @@ addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", 
                 'HIGHWAY CONTRACT', 'HC ', "H C", "H.C.", "H. C.",
                 ] + map("".join,product('ABCDEFGHIJKLMNOPQRSTUVWXYZ', string.digits, string.digits)) + ['0','1','2','3','4','5','6','7','8','9',]
 
-def normalize_address(address):
-    """ An address must start with an integer, 
-        the letter P, (PO BOX, P.O. BOX, etc), RR, the word Rural (as in Rural Route), 
-        HC, the word Highway (as in Highway Contract 77…), 
-        or a letter followed immediate by at least two integers, i.e. (like this W7905 State Road 29, or N4116 Springbrook Rd) """
+known_addr_prefixes = [ "APT", "APARTMENT", "OFFICE", "OFF", "FLOOR", "SUITE", "STE", "UNIT", "UNT", "FLR", ]
+
+def _find_addr_header_position(address):
     addr = address.strip().upper() 
     for suffix in addr_headers:
         if addr.startswith(suffix):
-            return addr    
+            return 0    
     min_match = None
     for suffix in addr_headers:
         if suffix in addr:
             min_match = min(min_match, addr.find(suffix)) if min_match is not None else addr.find(suffix)
-    retval = address if min_match is None else addr[min_match:]
-    return retval
+    if min_match is None:
+        raise IndexError("No known address header found")
+    return min_match
+    
+def normalize_address(address):
+    """ WARNING: OBSOLETE, just for backward compatibility.
+        Use parse_and_normalize_streetaddress instead.
+        An address must start with an integer, 
+        the letter P, (PO BOX, P.O. BOX, etc), RR, the word Rural (as in Rural Route), 
+        HC, the word Highway (as in Highway Contract 77…), 
+        or a letter followed immediate by at least two integers, i.e. (like this W7905 State Road 29, or N4116 Springbrook Rd) """
+    addr = address.strip().upper()
+    try:
+        addr = addr[_find_addr_header_position(addr):]
+    except IndexError:
+        pass
+    return addr
 
+def parse_and_normalize_streetaddress(address):
+    """ Returns dict:
+        address - normalized street address
+        company - company name if given
+        prefix - unparsed prefix
+    """
+    # determine if known prefix comes before address
+    info = dict(address="", company="", prefix="")
+    addr = address.strip().upper() 
+    try:
+        header_pos = _find_addr_header_position(addr)
+    except IndexError:
+        # Unknown address format, remains unchanged
+        info["address"] = addr
+        return info
+    if not header_pos or any(map(lambda _: _ == addr, known_addr_prefixes)):
+        # Nothing to parse - either address is normal or is one of known prefixes (which is just a corner-case)
+        info["address"] = addr
+        return info
+    
+    # find known prefix
+    prefix_pos = None
+    found_prefix = None
+    for prefix in known_addr_prefixes:
+        pos = addr.find(prefix)
+        if pos != -1 and pos < header_pos:
+            if (pos == 0 and addr[pos + len(prefix)] not in string.letters) \
+                or (pos + len(prefix) == len(addr) and addr[pos - 1] not in string.letters) \
+                or (addr[pos - 1] not in string.letters and addr[pos + len(prefix)] not in string.letters):
+                # starts with known prefix
+                if prefix_pos is None or pos < prefix_pos:
+                    prefix_pos, found_prefix = pos, prefix
+                    if pos == 0: break
+    unknown_prefix = ""
+    if prefix_pos is not None:
+        unknown_prefix, addr = addr[:prefix_pos], addr[prefix_pos:]
+        # Move known prefix part to the end of address
+        # For example: Suite 120 652 Independence Parkway => 652 Independence Parkway Suite 120
+        addr = normalize(re.sub(r"^(" + found_prefix + "\W*?\d+\S*)(.*)$",r"\2 \1", addr))
+    # deal with unknown prefix
+    if unknown_prefix:
+        if not is_person(unknown_prefix):
+            info["company"], unknown_prefix = unknown_prefix, ""
+    info.update(address=addr, prefix=unknown_prefix)
+    return info
+    
 def is_normal_address(address):
     """ Returns True is address is a normal one, See normalize_address for more """
     if not address: return False
