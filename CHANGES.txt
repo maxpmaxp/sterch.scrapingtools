@@ -3,7 +3,8 @@ Changelog
 
 0.6.5 (2014-07-13)
 ==================
- * parse_and_normalize_streetaddress introduced
+ * parse_and_normalize_streetaddress introduced to replace normalize_address
+ * more non-person markers added
 
 0.6.4 (2014-07-13)
 ==================

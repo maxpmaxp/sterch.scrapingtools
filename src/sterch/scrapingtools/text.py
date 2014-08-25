@@ -270,7 +270,7 @@ def is_person(fullname):
     """ Checks whether a name given is person's name """
     return not (any(map(lambda e:fullname.upper().strip().endswith(e), 
                             [' NA', 'LLC', ' INC', ' CO', ' CORP', 'LLP', 'LTD', 'LLC', 'INC.', ' CO.', ' CORP.', 'LLP.', 'LTD.' , ' LLE', ' LLE.', ' TRUST', ' COURT',
-                             " ORG", " ORG.", " CTY", " TREAS", " TAX", " DEPT", " DEPT.", " B M V", " CLUB", ])) or \
+                             " ORG", " ORG.", " CTY", " TREAS", " TAX", " DEPT", " DEPT.", " B M V", " CLUB", " P.C.", " PC", ])) or \
                any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
                                     ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'PLC', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
                                     'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
@@ -284,7 +284,7 @@ def is_person(fullname):
                                     "ASSIGNS", "EXEC", "DEVISEE", " TAX ", " DEPT ", " OF ", "SUCCESSORS", "APPEAL", 
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
                                     "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS", "COURTROOM",
-                                    "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D." ])) or \
+                                    "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D.", " P.C. ", " PC ", ])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])) or \
                 any(map(lambda e:fullname.upper().strip() == e, 
@@ -338,7 +338,7 @@ addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", 
                 'HIGHWAY CONTRACT', 'HC ', "H C", "H.C.", "H. C.",
                 ] + map("".join,product('ABCDEFGHIJKLMNOPQRSTUVWXYZ', string.digits, string.digits)) + ['0','1','2','3','4','5','6','7','8','9',]
 
-known_addr_prefixes = [ "APT", "APARTMENT", "OFFICE", "OFF", "FLOOR", "SUITE", "STE", "UNIT", "UNT", "FLR", ]
+known_addr_prefixes = [ "APT", "APARTMENT", "FLOOR", "SUITE", "STE", "UNIT", "UNT", "FLR", "MAIL STOP", "STOP", ]
 
 def _find_addr_header_position(address):
     addr = address.strip().upper() 
@@ -375,6 +375,7 @@ def parse_and_normalize_streetaddress(address):
     """
     # determine if known prefix comes before address
     info = dict(address="", company="", prefix="")
+    if not address: return info
     addr = address.strip().upper() 
     try:
         header_pos = _find_addr_header_position(addr)
@@ -382,8 +383,17 @@ def parse_and_normalize_streetaddress(address):
         # Unknown address format, remains unchanged
         info["address"] = addr
         return info
-    if not header_pos or any(map(lambda _: _ == addr, known_addr_prefixes)):
-        # Nothing to parse - either address is normal or is one of known prefixes (which is just a corner-case)
+    if any(map(lambda _: _ == addr, known_addr_prefixes)):
+        # Nothing to parse one of known prefixes (which is just a corner-case)
+        info["address"] = addr
+        return info
+    elif header_pos == 0:
+        if addr[0] in string.digits:
+            # work around addresses like: 1st Floor 1230 main Str.
+            for pattern in [ r"#?\d+\w{0,2}\s+" + _ for _ in known_addr_prefixes ]:
+                if re.match(pattern, addr):
+                    addr = normalize(re.sub(r"^(" + pattern + ")(.*)$", r"\2 \1", addr))
+                    break
         info["address"] = addr
         return info
     
@@ -405,12 +415,19 @@ def parse_and_normalize_streetaddress(address):
         unknown_prefix, addr = addr[:prefix_pos], addr[prefix_pos:]
         # Move known prefix part to the end of address
         # For example: Suite 120 652 Independence Parkway => 652 Independence Parkway Suite 120
-        addr = normalize(re.sub(r"^(" + found_prefix + "\W*?\d+\S*)(.*)$",r"\2 \1", addr))
+        addr = normalize(re.sub(r"^(" + found_prefix + "\W*?\S+)(.*)$",r"\2 \1", addr))
+        
+    else:
+        # no known prefix found
+        unknown_prefix, addr = addr[:header_pos], addr[header_pos:]
     # deal with unknown prefix
     if unknown_prefix:
         if not is_person(unknown_prefix):
-            info["company"], unknown_prefix = unknown_prefix, ""
-    info.update(address=addr, prefix=unknown_prefix)
+            info["company"], unknown_prefix = normalize(unknown_prefix), ""
+            while info["company"].endswith(","): info["company"] = info["company"][:-1].strip()
+    unknown_prefix = normalize(unknown_prefix)
+    while unknown_prefix.endswith(","): unknown_prefix = unknown_prefix[:-1].strip()
+    info.update(address=normalize(addr), prefix=normalize(unknown_prefix))
     return info
     
 def is_normal_address(address):
