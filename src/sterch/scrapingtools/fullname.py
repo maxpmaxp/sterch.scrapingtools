@@ -76,3 +76,20 @@ def parse_flms(allnames):
             job['lastname'] = "%s %s" % (allnames[1], allnames[2])
             job['middlename'] = " ".join(allnames[3:])
     return job
+
+def parse_mlfs(allnames):
+    """ Groups allnames list according to mlfs schema """
+    job = dict()
+    if len(allnames) == 2:
+         job['lastname'] = allnames[0]
+         job['firstname'] = allnames[1]
+    elif len(allnames) > 2:
+        if allnames[1].upper() in lastname_prefixes:
+            job['middlename'] = allnames[0]
+            job['lastname'] = " ".join(allnames[1:3])
+            job['firstname'] = " ".join(allnames[3:])
+        else:
+            job['middlename'] = allnames[0]
+            job['lastname'] = allnames[1]
+            job['firstname'] = " ".join(allnames[2:])
+    return job

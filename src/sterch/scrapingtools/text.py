@@ -192,6 +192,8 @@ def parse_fullname(fullname, schema="lfms"):
             parser = modfullname.parse_fmls
         elif schema == "flms":
             parser = modfullname.parse_flms
+        elif schema == "mlfs":
+            parser = modfullname.parse_mlfs
         else:
             raise ValueError("Unknown fullname schema %s" % schema)
         parsed = parser(allnames)
