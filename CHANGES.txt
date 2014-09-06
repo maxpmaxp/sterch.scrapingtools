@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.6.6 (2014-09-06)
+==================
+ * new schemas 'mlfs' and 'mfls' for fullname parsing
+
 0.6.5 (2014-07-13)
 ==================
  * parse_and_normalize_streetaddress introduced to replace normalize_address

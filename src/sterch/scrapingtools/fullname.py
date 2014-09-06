@@ -93,3 +93,20 @@ def parse_mlfs(allnames):
             job['lastname'] = allnames[1]
             job['firstname'] = " ".join(allnames[2:])
     return job
+
+def parse_mfls(allnames):
+    """ Groups allnames list according to mfls schema """
+    job = dict()
+    if len(allnames) == 2:
+         job['firstname'] = allnames[0]
+         job['lastname'] = allnames[1]
+    elif len(allnames) > 2:
+        if allnames[-2].upper() in lastname_prefixes:
+            job['middlename'] = " ".join(allnames[:-3])
+            job['firstname'] = allnames[-3:]
+            job['lastname'] = " ".join(allnames[-2:])
+        else:
+            job['middlename'] = " ".join(allnames[:-2])
+            job['firstname'] = allnames[-2]
+            job['lastname'] = allnames[-1]
+    return job
