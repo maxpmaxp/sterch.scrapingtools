@@ -200,7 +200,7 @@ class Client(object):
         self.lastURL = realurl
         try:
             page = GzipFile(fileobj=StringIO(page)).read()
-        except:
+        except Exception:
             pass
         return page
     
@@ -267,7 +267,7 @@ class Client(object):
             raise exc
         try:
             page = GzipFile(fileobj=StringIO(page)).read()
-        except:
+        except Exception:
             pass
         return page
     

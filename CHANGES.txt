@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.6.6 (2014-09-19)
+==================
+ * exceptions handling issue fixed
+
 0.6.5 (2014-07-13)
 ==================
  * parse_and_normalize_streetaddress introduced to replace normalize_address

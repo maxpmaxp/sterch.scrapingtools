@@ -300,7 +300,7 @@ def parse_city_state_zip(city_state_zip):
     info = dict(city="", state="", zip="")
     try:
         info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)
-    except:
+    except Exception:
         all_states = set(US_STATE_CODES.keys() + US_STATE_CODES.values() + CA_PROVINCE_CODES.keys() + CA_PROVINCE_CODES.values())
         try:
             p1, p2 = map(strip, city_state_zip.rsplit(" ", 1))
@@ -316,7 +316,7 @@ def parse_city_state_zip(city_state_zip):
                     info['city'], info['state'] = p1, p2
                 else:
                     info['city'] = "%s %s" (p1, p2)     
-        except:
+        except Exception:
             if city_state_zip.upper() in all_states:
                 info['state'] = city_state_zip
             else:
