@@ -15,15 +15,22 @@ from cStringIO import StringIO
 from gzip import GzipFile
 from handlers import BindableHTTPHandlerFactory
 from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory, IClient
-from random import choice, randint
+from random import randint
 from time import sleep
 from zope.component import getUtility, ComponentLookupError
 from zope.interface import directlyProvides, implements
 
 import mimetypes
-import os.path
 import urllib
 import urllib2 
+
+class HTTPResponse(object):
+    """ Sufficient reponse information """
+    def __init__(self, **kwargs):
+        self.code = kwargs.get('resp_code')
+        self.content = kwargs.get('raw_content')
+        self.headers = kwargs.get('resp_headers')
+        self.real_url = kwargs.get('real_url')
 
 class ClientError(Exception):
     """ Generic cleint's exception """
@@ -71,10 +78,9 @@ def createOpener(cookies=None, headers=None, _proxies=None, debug=False, custom_
             pass
     return opener
 
-def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=False, maxreadtries=MAXREADTRIES, delay=DELAY, debug=False, custom_handlers=None):
+def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadtries=MAXREADTRIES, delay=DELAY, debug=False, custom_handlers=None):
     """ url --- url to read
         data --- data to be POSTed. if dictionary --- in will be encoded.
-        needURL --- if set to True readpage returns tuple (data, url) where url is real reading url after redirects.
     """
     global cjar 
     ntries = 0
@@ -95,8 +101,11 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
                 topost = data
             request = urllib2.Request(url, topost, dict(headers)) if headers else urllib2.Request(url, topost)
             f = opener.open(request)
-            if needURL: realURL = f.geturl()
-            page = f.read()
+            resp = HTTPResponse()
+            resp.content = f.read()
+            resp.real_url = f.geturl()
+            resp.code = f.code
+            resp.headers = f.headers.items() if f.headers else []
             f.close()
             downloaded = True
             opener.close()
@@ -115,10 +124,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, needURL=
         print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries, ex)
         raise ex
      
-    if needURL:
-        return (page, realURL)
-    else:
-        return page
+    return resp
 
 def encode_multipart_formdata(fields, files):
     """
@@ -158,8 +164,12 @@ class Client(object):
     delay = DELAY
     maxreadtries = MAXREADTRIES
     
-    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=True, debug=False, custom_handlers=None):
-        self.debug = debug 
+    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=False, debug=False, custom_handlers=None):
+        self.resp_code = None
+        self.raw_response = None
+        self.resp_headers = None
+        self.real_url = None
+        self.debug = debug
         self.custom_handlers = custom_handlers
         if cookies is not None:
             self.cookies = cookies
@@ -188,16 +198,19 @@ class Client(object):
         self.lastURL = None
     
     def readpage(self, url, data=None, extra_headers=None):
-        page, realurl = readpage(url, data=data, 
+        resp = readpage(url, data=data,
                         cookies = self.cookies,
                         headers = self.headers + extra_headers if extra_headers else self.headers,
                         _proxies = self.proxies,
-                        needURL = True,
                         maxreadtries=self.maxreadtries,
                         delay=self.delay, 
                         debug=self.debug,
                         custom_handlers=self.custom_handlers)
-        self.lastURL = realurl
+        self.real_url = self.lastURL = resp.real_url
+        self.resp_code = resp.code
+        self.raw_response = page = resp.content
+        self.resp_headers = resp.headers
+
         try:
             page = GzipFile(fileobj=StringIO(page)).read()
         except Exception:
@@ -244,7 +257,10 @@ class Client(object):
         while not downloaded and ntries < MAXREADTRIES:     
             try:     
                 f = opener.open(request)
-                page = f.read()
+                self.raw_response = page = f.read()
+                self.real_url = self.lastURL = f.geturl()
+                self.resp_code = f.code
+                self.resp_headers = f.headers.items() if f.headers else []
                 f.close()
                 downloaded = True
                 opener.close()
@@ -255,7 +271,7 @@ class Client(object):
                 else:
                     print "ERROR: network error (%s)" % url, ex
                 opener.close()
-                sleep(DELAY)
+                sleep(self.delay)
                 ntries += 1
                 opener = createOpener(cookies=c, 
                                       headers=self.headers + extra_headers if extra_headers else self.headers, 
@@ -269,37 +285,6 @@ class Client(object):
             page = GzipFile(fileobj=StringIO(page)).read()
         except Exception:
             pass
-        return page
-    
-class BaseCaptchaAwareClient(Client):
-    """ Base class for clients that aware to solve captcha """
-    
-    def captcha_required(self, page):
-        """ Returns True if cpatche entry required, False otherwise.
-            Accepts page content as input.
-        """
-        raise NotImplemented()
-    
-    def solve_captcha(self, page):
-        """ Returns page content after captcha solving.
-            Accepts page content as input.
-        """
-        raise NotImplemented()
-    
-    def readpage(self, url, data=None):
-        page = super(BaseCaptchaAwareClient, self).readpage(url, data)
-        if self.captcha_required(page):
-            is_solved = False
-            ntries = 0
-            while not is_solved and ntries < MAXREADTRIES: 
-                try:
-                    page = self.solve_captcha(page)
-                    is_solved = True
-                except Exception, ex:
-                    print "ERROR: captcha solving error:",  ex
-                sleep(DELAY)
-                ntries += 1
-            if not is_solved: return ''
         return page
     
 def clone_client(c):
