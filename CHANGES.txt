@@ -1,6 +1,15 @@
 Changelog
 *********
 
+0.7 (2014-10-03)
+==================
+ * more response info introduced to Client: resp_headers, resp_code, raw_content, real_url
+ * return value type for opener.readpage changed and is not backward compatible;
+   this doesn't impact opener.Client
+ * useless class BaseCaptchaAwareClient removed
+ * unused imports removed
+ * minor issues with DELAY var fixed
+
 0.6.6 (2014-09-19)
 ==================
  * exceptions handling issue fixed
