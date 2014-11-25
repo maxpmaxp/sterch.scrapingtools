@@ -8,6 +8,7 @@
 __author__  = "Polscha Maxim (maxp@sterch.net)"
 __license__ = "ZPL"
 
+import logging
 from config import MAXREADTRIES, DELAY
 from cookielib import CookieJar
 from copy import copy
@@ -17,6 +18,7 @@ from handlers import BindableHTTPHandlerFactory
 from interfaces import IHTTPHeadersFactory, IProxyFactory, IIPFactory, IClient
 from random import randint
 from time import sleep
+from urlparse import urlparse
 from zope.component import getUtility, ComponentLookupError
 from zope.interface import directlyProvides, implements
 
@@ -91,7 +93,6 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadt
     else:
         c = cjar
     opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug, custom_handlers=custom_handlers)
-    realURL=''
     exc = ClientError("Download failed for unknown reason")
     while not downloaded and ntries < maxreadtries:
         try: 
@@ -111,18 +112,24 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadt
             opener.close()
         except Exception, ex:
             exc = ex
+            scheme, netloc, path, params, query, fragment = urlparse(url)
+            errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
+                        (ntries, _proxies.get(scheme) if _proxies else None, scheme, netloc, url, topost, headers)
             if type(ex) == urllib2.HTTPError:
-                print "ERROR: Can't read %s. Error %d" % (url, ex.code)
+                logging.exception("error=HTTPError code=%d %s" % (ex.code, errinfo))
             else:
-                print "ERROR: network error (%s)" % url, ex
+                logging.exception("error=ConnectionError %s" % errinfo)
             opener.close()
             sleep(delay)
             ntries += 1
             opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug)
             
-    if not downloaded : 
-        print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries, ex)
-        raise ex
+    if not downloaded:
+        scheme, netloc, path, params, query, fragment = urlparse(url)
+        errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
+                    (ntries, _proxies.get(scheme) if _proxies else None, scheme, netloc, url, topost, headers)
+        logging.exception("error=DownloadError %s" % errinfo)
+        raise exc
      
     return resp
 
@@ -249,8 +256,9 @@ class Client(object):
                               headers=self.headers + extra_headers if extra_headers else self.headers, 
                               _proxies = self.proxies,
                               debug = self.debug)
+        content_length = str(len(body))
         headers = {'Content-Type': content_type,
-                   'Content-Length': str(len(body))}
+                   'Content-Length': content_length}
         request = urllib2.Request(url, body, headers)
         exc = ClientError("Download failed for unknown reason")
         
@@ -266,10 +274,14 @@ class Client(object):
                 opener.close()
             except Exception, ex:
                 exc = ex
+                scheme, netloc, path, params, query, fragment = urlparse(url)
+                errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s contentlength=%s headers=\"%s\"" % \
+                            (ntries, self.proxies.get(scheme) if self.proxies else None, scheme, netloc, url, content_length, headers)
                 if type(ex) == urllib2.HTTPError:
-                    print "ERROR: Can't read %s. Error %d" % (url, ex.code)
+                    logging.exception("error=HTTPError code=%d %s" % (ex.code, errinfo))
                 else:
-                    print "ERROR: network error (%s)" % url, ex
+                    logging.exception("error=ConnectionError %s" % errinfo)
+
                 opener.close()
                 sleep(self.delay)
                 ntries += 1
@@ -279,7 +291,10 @@ class Client(object):
                                       debug=self.debug)
         
         if not downloaded : 
-            print "ERROR: Can't download page %s after %d tries. %s" % (url, ntries,ex)
+            scheme, netloc, path, params, query, fragment = urlparse(url)
+            errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
+                        (ntries, self._proxies.get(scheme) if self._proxies else None, scheme, netloc, url, content_length, headers)
+            logging.exception("error=DownloadError %s" % errinfo)
             raise exc
         try:
             page = GzipFile(fileobj=StringIO(page)).read()

@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.7.1 (2014-11-25)
+==================
+ * logging improved to be compatible with Splunk
+ * unused imports and vars removed
+
 0.7 (2014-10-03)
 ==================
  * more response info introduced to Client: resp_headers, resp_code, raw_content, real_url

@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012
+# All right reserved, 2012-2014
 #######################################################################
 
 """Text processing functions
@@ -8,12 +8,9 @@
 __author__  = "Polshcha Maxim (maxp@sterch.net)"
 __license__ = "ZPL"
 
-import sys
-import traceback
-import types
-from Queue import Queue, Empty
-from threading import Thread, Event
-from time import sleep
+import logging, sys, traceback, types
+from Queue import Empty
+from threading import Thread
 
 def workers_group_factory(in_queue, out_queue, event, timeout, activity, size):
     """ Creates and starts group of workers. Returns list of workers """
@@ -66,10 +63,10 @@ class Worker(Thread):
                             map(self.out_queue.put, result)
                         else:
                             self.out_queue.put(result)
-                except Empty, ex:
+                except Empty:
                     pass
-            except Exception, ex:
+            except Exception:
                 # Thread must stop if and only if event is set
-                print "Worker ERROR:" + str(ex)    
                 exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+                logging.exception("error=WorkerError type=\"%s\" value=\"%s\"" % (exceptionType, exceptionValue))
                 traceback.print_exception(exceptionType, exceptionValue, exceptionTraceback, file=sys.stdout)

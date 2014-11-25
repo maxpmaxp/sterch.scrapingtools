@@ -10,7 +10,7 @@ __author__  = """Polscha Maxim (maxp@sterch.net)
                  and http://bugs.python.org/issue11220 """
 __license__ = "ZPL" 
 
-import httplib, ssl, urllib2, socket, sys
+import httplib, logging, ssl, urllib2, socket
 
 class ProxyHTTPConnection(httplib.HTTPConnection):
     _ports = {'http' : 80, 'https' : 443}
@@ -89,7 +89,7 @@ try:
             return urllib2.HTTPSHandler.do_open(self, ProxyHTTPSConnection, req)
     
 except ImportError, ex:
-    print "Warning: SSL not supported"
+    logging.warning("SSL not supported")
 
 class CustomRedirectHandler(urllib2.HTTPRedirectHandler):
     def http_error_301(self, req, fp, code, msg, headers):

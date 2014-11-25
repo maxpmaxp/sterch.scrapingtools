@@ -1,5 +1,4 @@
 import os
-import sys
 from setuptools import setup, find_packages
 
 def read(*rnames):
@@ -7,11 +6,11 @@ def read(*rnames):
 
 setup(
     name='sterch.scrapingtools',
-    version='0.7',
+    version='0.7.1',
     url='http://sterch.net',
     license='ZPL',
     description='Library for building scrapers',
-    author='Polsha Maxim',
+    author='Polshcha Maksym',
     author_email='maxp@sterch.net',
     long_description='\n\n'.join([
         open('README.txt').read()
