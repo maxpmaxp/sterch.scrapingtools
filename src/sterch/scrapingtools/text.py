@@ -258,9 +258,9 @@ def parse_fulladdress(fulladdress):
 def remove_aka(fullname):
     """ Removes AKA from the fullname given """
     fu = fullname.upper()
-    for aka in ("AKA ", " AKA", "A.K.A.", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.',
-                "FKA ", " FKA", "F.K.A.", "F.K.A", "F/K/A", "(FORMERLY KNOWN AS)", "FORMERLY KNOWN AS", " F K A ", 'F. K. A.',
-                "DBA ", " DBA", "D.B.A.", "D/B/A", "(DOING BUSINESS AS)", "DOING BUSINESS AS", " D B A ", 'D. B. A.', 
+    for aka in (" AKA ", "A.K.A.", "A.K.A", "A/K/A", "(ALSO KNOWN AS)", "ALSO KNOWN AS", " A K A ", 'A. K. A.',
+                " FKA ", "F.K.A.", "F.K.A", "F/K/A", "(FORMERLY KNOWN AS)", "FORMERLY KNOWN AS", " F K A ", 'F. K. A.',
+                " DBA ", "D.B.A.", "D/B/A", "(DOING BUSINESS AS)", "DOING BUSINESS AS", " D B A ", 'D. B. A.',
                 'IN HER OFFICIAL CAPACITY', 'IN HIS OFFICIAL CAPACITY', 'IN HER CAPACITY', 'IN HIS CAPACITY'):
         if aka in fu:
             fu = fu.split(aka,1)[0]
