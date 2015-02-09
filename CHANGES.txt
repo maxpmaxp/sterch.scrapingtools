@@ -1,6 +1,11 @@
 Changelog
 *********
 
+0.7.2 (2015-02-09)
+==================
+ * &apos; entity added
+ * aka/dba/fka issue fixed
+
 0.7.1 (2014-11-25)
 ==================
  * logging improved to be compatible with Splunk
