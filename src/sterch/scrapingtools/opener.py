@@ -293,7 +293,7 @@ class Client(object):
         if not downloaded : 
             scheme, netloc, path, params, query, fragment = urlparse(url)
             errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
-                        (ntries, self._proxies.get(scheme) if self._proxies else None, scheme, netloc, url, content_length, headers)
+                        (ntries, self.proxies.get(scheme) if self.proxies else None, scheme, netloc, url, content_length, headers)
             logging.exception("error=DownloadError %s" % errinfo)
             raise exc
         try:
