@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012, 2013, 2014
+# All right reserved, 2012-2015
 #######################################################################
 
 """ Page downloading tools
@@ -80,7 +80,8 @@ def createOpener(cookies=None, headers=None, _proxies=None, debug=False, custom_
             pass
     return opener
 
-def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadtries=MAXREADTRIES, delay=DELAY, debug=False, custom_handlers=None):
+def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadtries=MAXREADTRIES, delay=DELAY,
+             debug=False, custom_handlers=None, socket_timeout=None):
     """ url --- url to read
         data --- data to be POSTed. if dictionary --- in will be encoded.
     """
@@ -101,7 +102,7 @@ def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadt
             else:
                 topost = data
             request = urllib2.Request(url, topost, dict(headers)) if headers else urllib2.Request(url, topost)
-            f = opener.open(request)
+            f = opener.open(request, timeout=socket_timeout)
             resp = HTTPResponse()
             resp.content = f.read()
             resp.real_url = f.geturl()
@@ -171,7 +172,8 @@ class Client(object):
     delay = DELAY
     maxreadtries = MAXREADTRIES
     
-    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=False, debug=False, custom_handlers=None):
+    def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=False, debug=False,
+                 custom_handlers=None, socket_timeout=15):
         self.resp_code = None
         self.raw_response = None
         self.resp_headers = None
@@ -203,6 +205,7 @@ class Client(object):
         else:
             self.proxies = None
         self.lastURL = None
+        self.socket_timeout = socket_timeout
     
     def readpage(self, url, data=None, extra_headers=None):
         resp = readpage(url, data=data,
@@ -212,7 +215,8 @@ class Client(object):
                         maxreadtries=self.maxreadtries,
                         delay=self.delay, 
                         debug=self.debug,
-                        custom_handlers=self.custom_handlers)
+                        custom_handlers=self.custom_handlers,
+                        socket_timeout=self.socket_timeout)
         self.real_url = self.lastURL = resp.real_url
         self.resp_code = resp.code
         self.raw_response = page = resp.content
@@ -231,7 +235,7 @@ class Client(object):
                     _proxies = self.proxies,
                     debug = self.debug)
         
-        f = opener.open(url)
+        f = opener.open(url, timeout=self.socket_timeout)
         realURL = f.geturl()
         f.close()
         return realURL
@@ -264,7 +268,7 @@ class Client(object):
         
         while not downloaded and ntries < MAXREADTRIES:     
             try:     
-                f = opener.open(request)
+                f = opener.open(request, timeout=self.socket_timeout)
                 self.raw_response = page = f.read()
                 self.real_url = self.lastURL = f.geturl()
                 self.resp_code = f.code
