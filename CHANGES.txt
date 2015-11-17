@@ -1,6 +1,10 @@
 Changelog
 *********
 
+0.7.5 (2015-11-17)
+==================
+ * smart_match_fullname improved
+
 0.7.4 (2015-04-03)
 ==================
  * socket timeout added

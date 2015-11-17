@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012, 2013, 2014
+# All right reserved, 2012, 2013, 2014, 2015
 #######################################################################
 
 """Text processing functions
@@ -505,6 +505,9 @@ def smart_fullname_cmp(fullname_variant, **person):
 
 def smart_match_fullname(text, **person):
     """ Returns True if person's name is in the text provided """
+    if smart_fullname_cmp(text, **person):
+        return True
+
     text = text.upper()
     for _ in '.,()"\':0123456789!@#$^%&*_~`</>\\': text = text.replace(_," ")
     all_tokens = filter(None, text.split()) 
@@ -513,7 +516,7 @@ def smart_match_fullname(text, **person):
         for j in xrange(0, len(tokens)):
             pieces = tokens[j:]
             if pieces:
-                possible_names = set((" ".join(pieces[:_]) for _ in (2,3)))
+                possible_names = set(" ".join(pieces[:_]) for _ in xrange(2, len(pieces) + 1))
                 for _name in possible_names:
                     if smart_fullname_cmp(_name, **person):
                         return True
