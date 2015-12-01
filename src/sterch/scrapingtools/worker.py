@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012-2014
+# All right reserved, 2012-2015
 #######################################################################
 
 """Text processing functions
@@ -58,8 +58,7 @@ class Worker(Thread):
                     item = self.in_queue.get(timeout=self.timeout)
                     result = self.activity(item)  
                     if result is not None:
-                        if type(result) == list or \
-                           type(result) is types.GeneratorType:
+                        if isinstance(result, (list, types.GeneratorType)):
                             map(self.out_queue.put, result)
                         else:
                             self.out_queue.put(result)
@@ -69,4 +68,4 @@ class Worker(Thread):
                 # Thread must stop if and only if event is set
                 exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
                 logging.exception("error=WorkerError type=\"%s\" value=\"%s\"" % (exceptionType, exceptionValue))
-                traceback.print_exception(exceptionType, exceptionValue, exceptionTraceback, file=sys.stdout)
+                logging.exception(traceback.format_exc())

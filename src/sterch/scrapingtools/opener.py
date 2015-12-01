@@ -80,59 +80,6 @@ def createOpener(cookies=None, headers=None, _proxies=None, debug=False, custom_
             pass
     return opener
 
-def readpage(url, data=None, cookies=None, headers=None, _proxies=None, maxreadtries=MAXREADTRIES, delay=DELAY,
-             debug=False, custom_handlers=None, socket_timeout=None):
-    """ url --- url to read
-        data --- data to be POSTed. if dictionary --- in will be encoded.
-    """
-    global cjar 
-    ntries = 0
-    downloaded = False
-    c = cookies 
-    if cookies is not None:
-        c = cookies
-    else:
-        c = cjar
-    opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug, custom_handlers=custom_handlers)
-    exc = ClientError("Download failed for unknown reason")
-    while not downloaded and ntries < maxreadtries:
-        try: 
-            if type(data) is dict:
-                topost = urllib.urlencode(data)
-            else:
-                topost = data
-            request = urllib2.Request(url, topost, dict(headers)) if headers else urllib2.Request(url, topost)
-            f = opener.open(request, timeout=socket_timeout)
-            resp = HTTPResponse()
-            resp.content = f.read()
-            resp.real_url = f.geturl()
-            resp.code = f.code
-            resp.headers = f.headers.items() if f.headers else []
-            f.close()
-            downloaded = True
-            opener.close()
-        except Exception, ex:
-            exc = ex
-            scheme, netloc, path, params, query, fragment = urlparse(url)
-            errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
-                        (ntries, _proxies.get(scheme) if _proxies else None, scheme, netloc, url, topost, headers)
-            if type(ex) == urllib2.HTTPError:
-                logging.exception("error=HTTPError code=%d %s" % (ex.code, errinfo))
-            else:
-                logging.exception("error=ConnectionError %s" % errinfo)
-            opener.close()
-            sleep(delay)
-            ntries += 1
-            opener = createOpener(cookies=c, headers=headers, _proxies=_proxies, debug=debug)
-            
-    if not downloaded:
-        scheme, netloc, path, params, query, fragment = urlparse(url)
-        errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
-                    (ntries, _proxies.get(scheme) if _proxies else None, scheme, netloc, url, topost, headers)
-        logging.exception("error=DownloadError %s" % errinfo)
-        raise exc
-     
-    return resp
 
 def encode_multipart_formdata(fields, files):
     """
@@ -171,6 +118,7 @@ class Client(object):
     implements(IClient)
     delay = DELAY
     maxreadtries = MAXREADTRIES
+    rotate_proxies = False
     
     def __init__(self, cookies=None, headers=None, _proxies=None, noproxy=False, x_proxy_session=False, debug=False,
                  custom_handlers=None, socket_timeout=15):
@@ -194,29 +142,67 @@ class Client(object):
         if x_proxy_session:
             self.headers.append(('X-Proxy-Session', str(randint(0,10**10))))
         if not noproxy: 
-            if _proxies:
-                self.proxies = _proxies
-            else: 
-                try:
-                    p = getUtility(IProxyFactory)()
-                    self.proxies = {'http' : p, 'https' : p } if p else None
-                except ComponentLookupError:
-                    self.proxies = None
+            self.proxies = _proxies if _proxies else self.get_proxy()
         else:
             self.proxies = None
         self.lastURL = None
         self.socket_timeout = socket_timeout
-    
+
+    @staticmethod
+    def get_proxy():
+        try:
+            p = getUtility(IProxyFactory)()
+        except ComponentLookupError:
+            p = None
+        return {'http': p, 'https': p} if p else None
+
     def readpage(self, url, data=None, extra_headers=None):
-        resp = readpage(url, data=data,
-                        cookies = self.cookies,
-                        headers = self.headers + extra_headers if extra_headers else self.headers,
-                        _proxies = self.proxies,
-                        maxreadtries=self.maxreadtries,
-                        delay=self.delay, 
-                        debug=self.debug,
-                        custom_handlers=self.custom_handlers,
-                        socket_timeout=self.socket_timeout)
+        ntries = 0
+        downloaded = False
+        c = self.cookies
+        headers = self.headers + extra_headers if extra_headers else self.headers
+        opener = createOpener(cookies=c,
+                              headers=headers,
+                              _proxies=self.proxies,
+                              debug=self.debug,
+                              custom_handlers=self.custom_handlers)
+        exc = ClientError("Download failed for unknown reason")
+        while not downloaded and ntries < self.maxreadtries:
+            try:
+                topost = urllib.urlencode(data) if type(data) is dict else data
+                request = urllib2.Request(url, topost, dict(headers)) if headers else urllib2.Request(url, topost)
+                f = opener.open(request, timeout=self.socket_timeout)
+                resp = HTTPResponse()
+                resp.content = f.read()
+                resp.real_url = f.geturl()
+                resp.code = f.code
+                resp.headers = f.headers.items() if f.headers else []
+                f.close()
+                downloaded = True
+                opener.close()
+            except Exception, ex:
+                exc = ex
+                scheme, netloc, path, params, query, fragment = urlparse(url)
+                errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
+                            (ntries, self.proxies.get(scheme) if self.proxies else None, scheme, netloc, url, topost, headers)
+                if type(ex) == urllib2.HTTPError:
+                    logging.exception("error=HTTPError code=%d %s" % (ex.code, errinfo))
+                else:
+                    logging.exception("error=ConnectionError %s" % errinfo)
+                opener.close()
+                sleep(self.delay)
+                ntries += 1
+                if self.rotate_proxies:
+                    self.proxies = self.get_proxy()
+                opener = createOpener(cookies=c, headers=headers, _proxies=self.proxies, debug=self.debug)
+
+        if not downloaded:
+            scheme, netloc, path, params, query, fragment = urlparse(url)
+            errinfo = "attempt=%s proxy=%s protocol=%s domain=%s url=%s request=%s headers=\"%s\"" % \
+                        (ntries, self.proxies.get(scheme) if self.proxies else None, scheme, netloc, url, topost, headers)
+            logging.exception("error=DownloadError %s" % errinfo)
+            raise exc
+
         self.real_url = self.lastURL = resp.real_url
         self.resp_code = resp.code
         self.raw_response = page = resp.content
@@ -230,10 +216,10 @@ class Client(object):
     
     def getrealurl(self, url, extra_headers=None):
         """ returns real url after redirects """
-        opener = createOpener(cookies = self.cookies,
-                    headers = self.headers + extra_headers if extra_headers else self.headers,
-                    _proxies = self.proxies,
-                    debug = self.debug)
+        opener = createOpener(cookies=self.cookies,
+                              headers=self.headers + extra_headers if extra_headers else self.headers,
+                              _proxies=self.proxies,
+                              debug=self.debug)
         
         f = opener.open(url, timeout=self.socket_timeout)
         realURL = f.geturl()
@@ -258,8 +244,8 @@ class Client(object):
             c = cjar
         opener = createOpener(cookies=c, 
                               headers=self.headers + extra_headers if extra_headers else self.headers, 
-                              _proxies = self.proxies,
-                              debug = self.debug)
+                              _proxies=self.proxies,
+                              debug=self.debug)
         content_length = str(len(body))
         headers = {'Content-Type': content_type,
                    'Content-Length': content_length}
@@ -289,6 +275,8 @@ class Client(object):
                 opener.close()
                 sleep(self.delay)
                 ntries += 1
+                if self.rotate_proxies:
+                    self.proxies = self.get_proxy()
                 opener = createOpener(cookies=c, 
                                       headers=self.headers + extra_headers if extra_headers else self.headers, 
                                       _proxies=self.proxies,
@@ -305,7 +293,8 @@ class Client(object):
         except Exception:
             pass
         return page
-    
+
+
 def clone_client(c):
     """ Completely copies client and its states """
     clone = copy(c)

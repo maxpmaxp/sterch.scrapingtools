@@ -1,5 +1,9 @@
 Changelog
 *********
+0.7.6 (2015-12-01)
+==================
+ * proxies rotation option added
+ * get rid of stand-alone readpage function
 
 0.7.5 (2015-11-17)
 ==================
