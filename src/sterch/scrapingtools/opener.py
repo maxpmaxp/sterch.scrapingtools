@@ -23,6 +23,7 @@ from zope.component import getUtility, ComponentLookupError
 from zope.interface import directlyProvides, implements
 
 import mimetypes
+import ssl
 import urllib
 import urllib2 
 
@@ -127,7 +128,11 @@ class Client(object):
         self.resp_headers = None
         self.real_url = None
         self.debug = debug
-        self.custom_handlers = custom_handlers
+        self.custom_handlers = custom_handlers or []
+        https_handler = next((h for h in self.custom_handlers if isinstance(h, urllib2.HTTPSHandler)), None)
+        if not https_handler:
+            self.custom_handlers.append(urllib2.HTTPSHandler(context=ssl._create_unverified_context()))
+
         if cookies is not None:
             self.cookies = cookies
         else:

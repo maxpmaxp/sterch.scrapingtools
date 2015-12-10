@@ -1,5 +1,9 @@
 Changelog
 *********
+0.7.7 (2015-12-10)
+==================
+* default HTTPS handler added with unverified ssl context
+
 0.7.6 (2015-12-01)
 ==================
  * proxies rotation option added
