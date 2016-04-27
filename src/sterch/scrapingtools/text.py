@@ -274,7 +274,7 @@ def is_person(fullname):
                any(map(lambda e:e in fullname.upper(), ['ACADEM', 'HOSPITAL', 'COMPANY', 'CO.', 'SERVICES', 'AUTHORITY', 'ASSOC', 'N.A.', ' BANK', ' BANK.',  
                                     ' INC', 'LLC', ' CORP', 'LLP', 'LLC', 'LTD', 'PLC', 'STATE', 'CITY', 'COUNTY', ' TRUST ', ' COURT ', 'DPT', 'DPT.'
                                     'TOWNSHIP', 'GOVERNMENT', 'UNIVERSITY', "UNION", " BANK ", "COOPERATIVE", "ENTERPR", "DISTRICT",  "COMPANY", "PARTNERSHIP",
-                                    "COMMONWEALTH", "CONDOMINIUM", "VILLAGE", "SHOP", "APARTMENTS", "&", "DBA", " AND ", "BUREAU", "TWP", "MARKET",
+                                    "COMMONWEALTH", "CONDOMINIUM", "VILLAGE", "SHOP", "APARTMENTS", "&", " DBA", " AND ", "BUREAU", "TWP", "MARKET",
                                     "STUDIO", "ASSOC", ' TRUST ', 'NETWORK', 'LIMITED', 'DEPARTMENT', 'UNIT', 'CREDIT', 'TENANT', 'UNKNOWN', 'N/A', 'PRISON',
                                     "HOSPITAL", "OFFICE", "AGENCY", "ORGANISATION", "ORGANIZATION", "CLINIC", "CLINIQUE", "BANQUE", "SERVICE", 
                                     "CORPORATION", "CHURCH", "HOTEL", "SUITES", "NATIONAL", "SOCIETY", "BUSINESS", "CENTER", "SECURITY",
@@ -286,7 +286,7 @@ def is_person(fullname):
                                     "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS", "COURTROOM",
                                     "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D.", " P.C. ", " PC ", ])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
-                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", ])) or \
+                            ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", "DBA"])) or \
                 any(map(lambda e:fullname.upper().strip() == e, 
                             US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())))
 

@@ -1,5 +1,9 @@
 Changelog
 *********
+0.7.8 (2016-04-27)
+==================
+* minor is_person issue fixed
+
 0.7.7 (2015-12-10)
 ==================
 * default HTTPS handler added with unverified ssl context
