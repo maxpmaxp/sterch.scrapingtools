@@ -290,47 +290,49 @@ def is_person(fullname):
                 any(map(lambda e:fullname.upper().strip() == e, 
                             US_STATE_CODES.keys() + CA_PROVINCE_CODES.keys())))
 
+RE_US_ZIP = re.compile(r'^\d{5}(?:[-\s]\d{4})?$')
+RE_CA_ZIP = re.compile(r'^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ ]?\d[ABCEGHJ-NPRSTV-Z]\d$', re.IGNORECASE)
+
+ALL_STATES_TOKENS = set(US_STATE_CODES.keys() + US_STATE_CODES.values()
+                        + CA_PROVINCE_CODES.keys() + CA_PROVINCE_CODES.values())
+
+
 def parse_city_state_zip(city_state_zip):
     """ Parses city_state_zip into a dict """
     city_state_zip = normalize(city_state_zip.replace(",", ", ").replace(".", ". ").strip())
     if city_state_zip:
         # normalize commas
         _m = " ,"
-        while _m in city_state_zip: city_state_zip = city_state_zip.replace(_m, ",")
+        while _m in city_state_zip:
+            city_state_zip = city_state_zip.replace(_m, ",")
     info = dict(city="", state="", zip="")
-    try:
-        info["city"], info["state"], info["zip"] = city_state_zip.rsplit(" ", 2)
-    except Exception:
-        all_states = set(US_STATE_CODES.keys() + US_STATE_CODES.values() + CA_PROVINCE_CODES.keys() + CA_PROVINCE_CODES.values())
-        try:
-            p1, p2 = map(strip, city_state_zip.rsplit(" ", 1))
-            # check if p1 is US zip :
-            if all(map(lambda x:x in "0123456789-", p2)):
-                info["zip"] = p2
-                if p1.upper() in all_states:
-                    info['state'] = p1
-                else:
-                    info['city'] = p1
-            else:
-                if p2.upper() in all_states:
-                    info['city'], info['state'] = p1, p2
-                else:
-                    info['city'] = "%s %s" (p1, p2)     
-        except Exception:
-            if city_state_zip.upper() in all_states:
-                info['state'] = city_state_zip
-            else:
-                info['city'] = city_state_zip
+
+    pieces = city_state_zip.split(" ")
+    # Get zip, if exists
+    if RE_US_ZIP.match(pieces[-1]) or RE_CA_ZIP.match(pieces[-1]):
+        info["zip"] = pieces.pop()
+    elif len(pieces) >= 2:
+        ca_zip_candidate = pieces[-2] + " " + pieces[-1]
+        if RE_CA_ZIP.match(ca_zip_candidate):
+            info["zip"] = " ".join(pieces[-2:])
+            pieces = pieces[:-2]
+
+    # parse state of 3,2,1 tokens
+    for tlen in (3, 2, 1):
+        if len(pieces) >= tlen:
+            token = " ".join(pieces[-tlen:]).upper()
+            if token in ALL_STATES_TOKENS:
+                info["state"] = token
+                pieces = pieces[:-tlen]
+
+    # the rest is city
+    info["city"] = " ".join(pieces)
                 
     for f in ('city', 'state', 'zip'):
-        info[f] = info[f].replace(u'\xa0','').strip()
-        if info[f].endswith(",") : info[f] = info[f][:-1]
-    info['state'] = info['state'].upper()
-    if info["zip"] and info["zip"].upper() in US_STATE_CODES.values():
-        # state is in zip field by mistake
-        info["city"] = ("%(city)s %(state)s" % info).strip()
-        info["state"] = info["zip"]
-        info["zip"] = ""
+        info[f] = info[f].replace(u'\xa0', '').strip()
+        if info[f].endswith(","):
+            info[f] = info[f][:-1]
+
     return info
 
 addr_headers = [ "PO BOX", "P.O. BOX","P O BOX", "POBOX", 'PO ', "P O", "P.O.", "P. O.", 
