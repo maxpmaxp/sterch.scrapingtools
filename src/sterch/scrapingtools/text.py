@@ -1,6 +1,6 @@
 ### -*- coding: utf-8 -*- #############################################
 # Developed by Maksym Polshcha (maxp@sterch.net)
-# All right reserved, 2012, 2013, 2014, 2015
+# All right reserved, 2012-2017
 #######################################################################
 
 """Text processing functions
@@ -262,7 +262,7 @@ def remove_aka(fullname):
                 " FKA ", "F.K.A.", "F.K.A", "F/K/A", "(FORMERLY KNOWN AS)", "FORMERLY KNOWN AS", " F K A ", 'F. K. A.',
                 " DBA ", "D.B.A.", "D/B/A", "(DOING BUSINESS AS)", "DOING BUSINESS AS", " D B A ", 'D. B. A.',
                 'IN HER OFFICIAL CAPACITY', 'IN HIS OFFICIAL CAPACITY', 'IN HER CAPACITY', 'IN HIS CAPACITY',
-                'DESCRIBED AS'):
+                'DESCRIBED AS', "NOW KNOWN AS"):
         if aka in fu:
             fu = fu.split(aka,1)[0]
     return fu.strip()
@@ -286,7 +286,7 @@ def is_person(fullname):
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
                                     "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS", "COURTROOM",
                                     "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D.", " P.C. ", " PC ",
-                                    "CURRENCY", "COMPENSAT"])) or \
+                                    "CURRENCY", "COMPENSAT", "ALL OTHERS"])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", "DBA"])) or \
                 any(map(lambda e:fullname.upper().strip() == e, 
