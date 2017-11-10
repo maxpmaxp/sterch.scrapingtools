@@ -1,5 +1,9 @@
 Changelog
 *********
+0.7.11 (2017-11-10)
+==================
+* minor is_person improvement
+
 0.7.10 (2017-05-05)
 ==================
 * minor remove_aka improvement

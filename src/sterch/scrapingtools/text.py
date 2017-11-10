@@ -286,7 +286,8 @@ def is_person(fullname):
                                     "BMV", " B M V ", "B.M.V.", "B. M. V.", "B/M/W",
                                     "REGIONAL", "SYSTEM", "HEALTH", "RURAL", "HIGHWAY", "DISTR", "PARTNERS", "BUILDING", "APTS", "COURTROOM",
                                     "CASINO", "COMMISSION", " CLUB ", "L.L.C.", "L.L.E.", "L.L.P.", "L.T.D.", " P.C. ", " PC ",
-                                    "CURRENCY", "COMPENSAT", "ALL OTHERS"])) or \
+                                    "CURRENCY", "COMPENSAT", "ALL OTHERS", "CONTRACTOR", "INDEMNITY", "AMERICAN", "WIRELESS", "PACIFIC",
+                                    "SPECIALIST", "SURGERY", "WHOLESALE", "CONCRETE", "ENERGY", "MUTUAL", "SUPPLY"])) or \
                 any(map(lambda e:fullname.upper().strip().startswith(e), 
                             ['COURT ', 'BANK ', 'TRUST ', 'CTY ', 'TREAS ', "TAX ", "DEPT ", "DEPT. ", "B M V ", "CLUB ", "DBA"])) or \
                 any(map(lambda e:fullname.upper().strip() == e, 
