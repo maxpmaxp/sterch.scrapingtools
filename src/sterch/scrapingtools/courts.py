@@ -101,7 +101,7 @@ def is_john_doe(**case):
     pieces = filter(None, fullname.split())
     return is_person(fullname) and \
             (any(map(lambda s: s in fullname, ['UNKSP', 'UNK SP', 'UNK SPOUSE', 'DOE JOHN', 'DOE JANE', 'JOHN DOE', 'JANE DOE', 'UNKNOWN', ' DOES ', ' DOE '])) or
-             any(map(lambda s: s in pieces, ("DOE", "DOES", "UNKNOWN", "UNK", "SPOSE", "TENANT",))))
+             any(map(lambda s: s in pieces, ("DOE", "DOES", "UNKNOWN", "UNK", "SPOUSE", "TENANT", "POSSESSION", "PARTIES"))))
             
 class SequenceState(object):
     """ Sequence pulling state """
