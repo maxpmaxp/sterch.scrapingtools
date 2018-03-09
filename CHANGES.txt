@@ -1,5 +1,9 @@
 Changelog
 *********
+0.7.12 (2018-03-09)
+==================
+* minor is_john_doe improvement
+
 0.7.11 (2017-11-10)
 ==================
 * minor is_person improvement
